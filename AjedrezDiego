@@ -34,49 +34,50 @@
 ;fichas blancas
 (define BishopW   "WhitePieces/whiteBishop.png")
 (define KnightW "WhitePieces/whiteKnight.png")
-(define torreB   "WhitePieces/whiteRook.png")
-(define reyB     "WhitePieces/whiteKing.png")
-(define reinaB   "WhitePieces/whiteQueen.png")
-(define peonB    "WhitePieces/whitePawn.png" )
+(define rookW   "WhitePieces/whiteRook.png")
+(define kingW     "WhitePieces/whiteKing.png")
+(define queenW   "WhitePieces/whiteQueen.png")
+(define pawnW    "WhitePieces/whitePawn.png" )
 
 
 ;fichas negras
-(define alfilN   "BlackPieces/blackBishop.png")
-(define caballoN "BlackPieces/blackKnight.png")
-(define torreN   "BlackPieces/blackRook.png")
-(define reyN     "BlackPieces/blackKing.png")
-(define reinaN   "BlackPieces/blackQueen.png")
-(define peonN "BlackPieces/blackPawn.png" )
+(define BishopB   "BlackPieces/blackBishop.png")
+(define KnightB "BlackPieces/blackKnight.png")
+(define rookB   "BlackPieces/blackRook.png")
+(define kingB     "BlackPieces/blackKing.png")
+(define queenB   "BlackPieces/blackQueen.png")
+(define pawnB "BlackPieces/blackPawn.png" )
  
 
 ;finalizar de llamar fichas negras
 
-;EvaluateImage le asigna una imagen a cada caracter distinto
+;PieceAsignament evalua el caracter que se encuentra en otra funcion y lo evalua con un caracter que
+;se refiere a una pieza del ajedrez, y despues le afilia una imagen 
 ( define ( PieceAsignament char)
   ( if ( equal? char #\T)
-      torreN
+      rookB
       ( if ( equal? char #\C)
-          caballoN
+          KnightB
           ( if ( equal? char #\A)
-              alfilN
+              BishopB
               ( if ( equal? char #\D)
-                  reinaN
+                  queenB
                   (if ( equal? char #\R )
-                      reyN
+                      kingB
                       (if ( equal? char #\P )
-                          peonN
+                          pawnB
                           ( if ( equal? char #\t)
-                               torreB
+                               rookW
                                ( if ( equal? char #\c)
                                     KnightW
                                     ( if ( equal? char #\a)
                                          BishopW
                                          ( if ( equal? char #\d)
-                                              reinaB
+                                              queenW
                                               (if ( equal? char #\r)
-                                                  reyB
+                                                  kingW
                                                   (if ( equal? char #\p )
-                                                      peonB 
+                                                      pawnW 
                                                       "";else
                                                   ) ;end if ( equal? char #\p)
                                               ) ;end if ( equal? char #\r)        
@@ -90,8 +91,9 @@
           ) ;end if ( equal? char #\A)
       ) ;end if ( equal? char #\C)
   ) ;end if ( equal? char #\T)
-) ;end function definition EvaluateImage
+) ;endFunction PieceAsignament
 
+; InicialTable nos muestra el tablero inicial
 (define InicialTable (string-append
                    "TCADRACT"
                    "PPPPPPPP"
@@ -102,20 +104,24 @@
                    "pppppppp"
                    "tcadract"))
 
-( define ( ColocarFicha str count)
-  ( if ( < count ( string-length str))
-       (if (equal? (string-ref str count) #\x)
-           ( ColocarFicha str ( + count 1))
-        ( begin
-         ((( draw-pixmap-posn (PieceAsignament ( string-ref str count))) ventana1)  ( make-posn ( * (+ 1 (remainder count 8)) 50) ( * (+ 1 (quotient count 8)) 50)))
-         ( ColocarFicha str ( + count 1))
-        ) ;end begin
-       ); end if ( equal? (string-ref string counter) #\z)
-       (void)
-); end if ( < counter ( string-length string)
-) ;end function PieceForDisplay
 
-(ColocarFicha InicialTable 0)
+;;Creamos la funcion PiecePut que sirve para poner la ficha en su lugar correspondiente
+;;comparando cada parte de la funcion "InicialTabl"
+
+ (define (PiecePut str count)
+  (if (< count (string-length str))
+        (if (not (equal? (string-ref str count) #\x))
+            (begin
+              (((draw-pixmap-posn (PieceAsignament (string-ref str count))) ventana1) (make-posn (* (+ 1 (remainder count 8)) 50) (* (+ 1 (quotient count 8)) 50)))
+              (PiecePut str (+ count 1))
+            );endBegin and start else
+               (PiecePut str (+ count 1))
+        );end (if (not (equal? (string-ref str count) #\x)) and start else
+        (void)        
+  );end (if (< count (string-length str))
+ ); EndFunction PiecePut
+
+(PiecePut InicialTable 0)
 
 
 
