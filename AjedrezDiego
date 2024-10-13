@@ -1,0 +1,121 @@
+#lang racket
+
+( require graphics/graphics )
+(open-graphics) 
+(define ventana1 (open-viewport "Ajedrez"  500 600))
+
+
+(define (dibujar a b e)
+  (if (> e 8)
+      ((draw-rectangle ventana1) (make-posn 49 49) 401 401 "black")
+      (if (> a 400)
+          (dibujar 50 (+ b 50) (+ e 1))
+          (begin
+            (if(odd? e)
+               (if(odd?(/ a 50))
+                  (dibujar(+ a 50)b e)
+                  (begin
+                    ((draw-solid-rectangle ventana1)(make-posn a b)50 50 "slate blue")
+                    (dibujar(+ a 50)b e))     
+                  )
+                (if(odd?(/ a 50))
+                  (begin
+                    ((draw-solid-rectangle ventana1)(make-posn a b)50 50 "slate blue")
+                    (dibujar(+ a 50)b e))
+                  (dibujar(+ a 50)b e))        
+               )
+            )
+          )
+      )
+  )
+
+(dibujar 50 50 1)
+
+;fichas blancas
+(define BishopW   "WhitePieces/whiteBishop.png")
+(define KnightW "WhitePieces/whiteKnight.png")
+(define torreB   "WhitePieces/whiteRook.png")
+(define reyB     "WhitePieces/whiteKing.png")
+(define reinaB   "WhitePieces/whiteQueen.png")
+(define peonB    "WhitePieces/whitePawn.png" )
+
+
+;fichas negras
+(define alfilN   "BlackPieces/blackBishop.png")
+(define caballoN "BlackPieces/blackKnight.png")
+(define torreN   "BlackPieces/blackRook.png")
+(define reyN     "BlackPieces/blackKing.png")
+(define reinaN   "BlackPieces/blackQueen.png")
+(define peonN "BlackPieces/blackPawn.png" )
+ 
+
+;finalizar de llamar fichas negras
+
+;EvaluateImage le asigna una imagen a cada caracter distinto
+( define ( PieceAsignament char)
+  ( if ( equal? char #\T)
+      torreN
+      ( if ( equal? char #\C)
+          caballoN
+          ( if ( equal? char #\A)
+              alfilN
+              ( if ( equal? char #\D)
+                  reinaN
+                  (if ( equal? char #\R )
+                      reyN
+                      (if ( equal? char #\P )
+                          peonN
+                          ( if ( equal? char #\t)
+                               torreB
+                               ( if ( equal? char #\c)
+                                    KnightW
+                                    ( if ( equal? char #\a)
+                                         BishopW
+                                         ( if ( equal? char #\d)
+                                              reinaB
+                                              (if ( equal? char #\r)
+                                                  reyB
+                                                  (if ( equal? char #\p )
+                                                      peonB 
+                                                      "";else
+                                                  ) ;end if ( equal? char #\p)
+                                              ) ;end if ( equal? char #\r)        
+                                         ) ;end if ( equal? char #\d)             
+                                    ) ;end if ( equal? char #\a)                  
+                               ) ;end if ( equal? char #\c)                       
+                          ) ;end if ( equal? char #\t)
+                      ) ;end if ( equal? char #\P) 
+                  ) ;end if ( equal? char #\R)
+              ) ;end if ( equal? char #\D)
+          ) ;end if ( equal? char #\A)
+      ) ;end if ( equal? char #\C)
+  ) ;end if ( equal? char #\T)
+) ;end function definition EvaluateImage
+
+(define InicialTable (string-append
+                   "TCADRACT"
+                   "PPPPPPPP"
+                   "xxxxxxxx"
+                   "xxxxxxxx"
+                   "xxxxxxxx"
+                   "xxxxxxxx"
+                   "pppppppp"
+                   "tcadract"))
+
+( define ( ColocarFicha str count)
+  ( if ( < count ( string-length str))
+       (if (equal? (string-ref str count) #\x)
+           ( ColocarFicha str ( + count 1))
+        ( begin
+         ((( draw-pixmap-posn (PieceAsignament ( string-ref str count))) ventana1)  ( make-posn ( * (+ 1 (remainder count 8)) 50) ( * (+ 1 (quotient count 8)) 50)))
+         ( ColocarFicha str ( + count 1))
+        ) ;end begin
+       ); end if ( equal? (string-ref string counter) #\z)
+       (void)
+); end if ( < counter ( string-length string)
+) ;end function PieceForDisplay
+
+(ColocarFicha InicialTable 0)
+
+
+
