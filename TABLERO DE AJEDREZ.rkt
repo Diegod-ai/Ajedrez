@@ -100,7 +100,7 @@
   (if (or (equal? (string-ref string index) #\p) (equal? (string-ref string index) #\t) (equal? (string-ref string index) #\c)
           (equal? (string-ref string index) #\a) (equal? (string-ref string index) #\r) (equal? (string-ref string index) #\d))
       -1
-      ;si no es ninguna, devolverá 2
+      ;si no es ninguna, devolverá 0
       0)))
 
 ;servirá para crear una string nueva la cual indicará las posiciones del ajedrez
