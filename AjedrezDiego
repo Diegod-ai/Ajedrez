@@ -29,7 +29,8 @@
       )
   )
 
-(dibujar 50 50 1)
+(define table (dibujar 50 50 1))
+
 
 ;fichas blancas
 (define BishopW   "WhitePieces/whiteBishop.png")
@@ -94,7 +95,7 @@
 ) ;endFunction PieceAsignament
 
 ; InicialTable nos muestra el tablero inicial
-(define InicialTable (string-append
+(define inicialTable (string-append
                    "TCADRACT"
                    "PPPPPPPP"
                    "xxxxxxxx"
@@ -121,7 +122,80 @@
   );end (if (< count (string-length str))
  ); EndFunction PiecePut
 
-(PiecePut InicialTable 0)
+(PiecePut inicialTable 0)
+
+
+;;Aqui pedimos el click lo guardamos en el identificador "ubicacion"
+(define ubicacion (get-mouse-click ventana1))
+;; definimos la posicion x como "a" y hacemos esa operacion para que nos de el valor
+;;de la columna en la que se encuentra posicionada
+(define x (quotient (posn-x (mouse-click-posn ubicacion)) 50))
+;; definimos la posicion y como "b" y hacemos esa operacion para que nos de el valor
+;;de la fila en la que se encuentra posicionada
+(define y (quotient (posn-y (mouse-click-posn ubicacion)) 50))
+(define (casilla) ( - (+ x (* 8 y ) ) 9 ) )
+
+ (define (colorComprobant)
+  (if ( or (equal? (string-ref inicialTable (casilla)) #\T ) (equal? (string-ref inicialTable (casilla)) #\C )
+         (equal? (string-ref inicialTable (casilla)) #\A ) (equal? (string-ref inicialTable (casilla)) #\D )
+         (equal? (string-ref inicialTable (casilla)) #\R ) (equal? (string-ref inicialTable (casilla)) #\P ));EndCondition or
+   ;Si la pieza es negra devolvera un 1
+    1 ; else
+    
+   (if ( or (equal? (string-ref inicialTable (casilla)) #\t ) (equal? (string-ref inicialTable (casilla)) #\c )
+         (equal? (string-ref inicialTable (casilla)) #\a ) (equal? (string-ref inicialTable (casilla)) #\d )
+         (equal? (string-ref inicialTable (casilla)) #\r ) (equal? (string-ref inicialTable (casilla)) #\p ));EndCondition or
+    ;si la pieza es blanca devolvera un 2 
+      2 ; else
+
+      ; en caso contrario, no devuelve nada
+      0
+   ); Endif que comprueba que las fichas son negras
+  ); Endif que comprueba que las fichas son Blancas
+ ); EndFunction colorComprobant
+
+
+  ;;Movimiento de peones
+  (define (pawnMovement)
+
+     ;; Esta condicion sirve para corroborar la pieza que se quiere mover segun el turno
+     ;; Si esta condicion es correcta, se moveran los peones negros 
+    ( if ( and ( = (colorComprobant ) 1 )  ( equal? (string-ref inicialTable ) #\P))
+       
+        "vas a mover un peon negro"; else
+     ;; De lo contrario, revisa si los peones son blancos para poder moverlos 
+           ( if ( and ( = (colorComprobant ) 2) ( equal? (string-ref inicialTable ) #\p)) 
+          
+             "vas a mover un peon blanco"
+     ;; Si ninguna de las dos se cumple significa que no esta querieno mover un peon
+     ;; Esto es el reemplazo temporal de la llamada recursiva para evitar perder el turno y mover cualquier ficha 
+             "No es un peon blanco"
+           ); EndIf Movimiento de las fichas blancas
+    ); EndIf Movimiento de las fichas negras
+  ); EndFunction pawnMovement
+
+  
+ ;;Esta condicion solo sirve para el incio del juego, avisar al jugador que deben empezar las piezas blancas 
+ (if (not (equal? (colorComprobant) 2 ))
+    (begin
+      (printf "Recuerde que siempre empiezan las blancas ")
+      (colorComprobant )
+    );endBegin 
+    ; En caso contrario
+    (pawnMovement)
+    
+ );endIf
+
+; Este identificador sirve para iniciar el juego, ahora solo nos mostrara el comprobante de que empiezan los peones blancos
+ (define (TurnComprobant )
+  (if ( = (colorComprobant) 1 )
+      (pawnMovement)
+    (if ( = (colorComprobant) 2 )
+        (pawnMovement)
+        "Debe seleccionar una casilla con su ficha"
+    ); EndIf ( = (colorComprobant) 2 )
+   ); EndIf ( = (colorComprobant) 1 )
+ ); EndFunction TurnComprobant
 
 
 
