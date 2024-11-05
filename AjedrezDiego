@@ -6,6 +6,7 @@
 
 
 (define (dibujar a b e)
+  
   ((draw-string ventana1) (make-posn 200 30) "     AJEDREZ" "brown")
   (if (> e 8)
       ((draw-rectangle ventana1) (make-posn 50 50) 401 401 "black")
@@ -14,7 +15,9 @@
           (begin
             (if(odd? e)
                (if (odd? (/ a 50 ) )
-                   (dibujar(+ a 50)b e)
+                   (begin
+                    ((draw-solid-rectangle ventana1)(make-posn a b) 50 50 "white")
+                    (dibujar(+ a 50)b e))
                    (begin
                      ((draw-solid-rectangle ventana1)(make-posn a b) 50 50 "slate blue")
                      (dibujar(+ a 50)b e))     
@@ -23,7 +26,11 @@
                   (begin
                     ((draw-solid-rectangle ventana1)(make-posn a b) 50 50 "slate blue")
                     (dibujar(+ a 50)b e))
-                  (dibujar(+ a 50)b e))        
+                  
+                  (begin
+                    ((draw-solid-rectangle ventana1)(make-posn a b) 50 50 "white")
+                    (dibujar(+ a 50)b e))
+                  )                  
                )
             )
           )
@@ -101,23 +108,22 @@
 
 ; InicialTable nos muestra el tablero inicial
 (define inicialTable (string-append
-                      "pCADRACT" ;fichas negras 
+                      "TCADRACT" ;fichas negras 
                       "PPPPPPPP" ;peones negros
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "pppppppp" ;peones blancos
-                      "Pcadract" ;fichas blancas
+                      "tcadract" ;fichas blancas
                       ))
-
-
 
 ;;Creamos la funcion PiecePut que sirve para poner la ficha en su lugar correspondiente
 ;;comparando cada parte de la funcion "InicialTable"
 (define (PiecePut str count)
   
-  (if (< count (string-length str)) 
+  (if (< count (string-length str))
+      
       (if (not (equal? (string-ref str count) #\x))  
           (begin                                                                              
         
@@ -135,77 +141,152 @@
 ;aqui llamamos la funcion que llama el tablero y las fichas
 (table inicialTable )
 
+;;------------------StartFunction Casillas-----------------;;
+
 ;;Aqui creamos una funcion global que facilitara los clicks en todo el codigo
 ;;funcion (casilla a b) cuando se llamara tomara los diferentes
 ;;parametros que le asignaremos en las demas funciones
 
 (define (casilla a b)
-  (- (+ a (* b 8)) 9 )  )
+   ( - (+ a (* b 8)) 9 ))
 (define (pos-x click) (quotient (posn-x click) 50))
 (define (pos-y click) (quotient (posn-y click) 50))
 
- (define (colorComprobant)
-  (if ( or (equal? (string-ref inicialTable (casilla)) #\T ) (equal? (string-ref inicialTable (casilla)) #\C )
-         (equal? (string-ref inicialTable (casilla)) #\A ) (equal? (string-ref inicialTable (casilla)) #\D )
-         (equal? (string-ref inicialTable (casilla)) #\R ) (equal? (string-ref inicialTable (casilla)) #\P ));EndCondition or
+;;------------------EndFunction Casillas-----------------;;
+
+;;------------------StarFunction CasillasLimite-----------------;;
+(define (limites posn)
+
+  (define posnx (posn-x posn))
+  (define posny (posn-y posn))
+  
+  (if (or (< posnx 50 ) (< posny 50 ) (> posnx 450 ) (> posny 450 ))
+      (limites (mouse-click-posn (get-mouse-click ventana1)));else
+      posn
+      );endIf
+);;------------------EndFunction CasillasLimite-----------------;;
+
+
+;;------------------StartFunction ColorComprobant-----------------;;
+
+ (define (colorComprobant click str)
+   
+   (define comprobada (limites click) )
+   (define pos-xComp (pos-x comprobada))
+   (define pos-yComp (pos-y comprobada))
+   (define Comprobant (casilla pos-xComp pos-yComp))
+  
+  (if ( or (equal? (string-ref str Comprobant) #\T ) (equal? (string-ref str Comprobant) #\C )
+         (equal? (string-ref str Comprobant) #\A ) (equal? (string-ref str Comprobant) #\D )
+         (equal? (string-ref str Comprobant) #\R ) (equal? (string-ref str Comprobant) #\P ));EndCondition or
    ;Si la pieza es negra devolvera un true
-    #t ; else
+    1 ; else
     
-   (if ( or (equal? (string-ref inicialTable (casilla)) #\t ) (equal? (string-ref inicialTable (casilla)) #\c )
-         (equal? (string-ref inicialTable (casilla)) #\a ) (equal? (string-ref inicialTable (casilla)) #\d )
-         (equal? (string-ref inicialTable (casilla)) #\r ) (equal? (string-ref inicialTable (casilla)) #\p ));EndCondition or
+   (if ( or (equal? (string-ref str Comprobant) #\t ) (equal? (string-ref str Comprobant) #\c )
+         (equal? (string-ref str Comprobant) #\a ) (equal? (string-ref str Comprobant) #\d )
+         (equal? (string-ref str Comprobant) #\r ) (equal? (string-ref str Comprobant) #\p ));EndCondition or
     ;si la pieza es blanca devolvera un false 
-      #f ; else
+      -1 ; else
 
       ; en caso contrario, no devuelve nada
       0
    ); Endif que comprueba que las fichas son negras
   ); Endif que comprueba que las fichas son Blancas
- ); EndFunction colorComprobant
+ );;------------------EndFunction ColorComprobant-----------------;;
 
-
-  ;;Movimiento de peones
-  (define (pawnMovement)
-
-     ;; Esta condicion sirve para corroborar la pieza que se quiere mover segun el turno
-     ;; Si esta condicion es correcta, se moveran los peones negros 
-    ( if ( and ( equal? (colorComprobant ) #t )  (equal? (string-ref inicialTable (casilla) ) #\P))
-       
-        "vas a mover un peon negro"; else
-     ;; De lo contrario, revisa si los peones son blancos para poder moverlos 
-           ( if ( and ( equal? (colorComprobant ) #f) (equal? (string-ref inicialTable (casilla) ) #\p)) 
-          
-             "vas a mover un peon blanco"
-     ;; Si ninguna de las dos se cumple significa que no esta querieno mover un peon
-     ;; Esto es el reemplazo temporal de la llamada recursiva para evitar perder el turno y mover cualquier ficha 
-             (colorComprobant)
-           ); EndIf Movimiento de las fichas blancas
-    ); EndIf Movimiento de las fichas negras
-  ); EndFunction pawnMovement
-
+;;------------------StarFunction MakeString-----------------;;
+(define (MakeString oldString char oldPos newPos)
   
- ;;Esta condicion solo sirve para el incio del juego, avisar al jugador que deben empezar las piezas blancas 
- (if (not (equal? (colorComprobant) #f ))
-    (begin
-      (printf "Recuerde que siempre empiezan las blancas ")
-      (pawnMovement )
-    );endBegin 
-    ; En caso contrario
-    (pawnMovement)
-    
- );endIf
 
-; Este identificador sirve para iniciar el juego, ahora solo nos mostrara el comprobante de que empiezan los peones blancos
- (define (TurnComprobant )
-  (if ( = (colorComprobant) 1 )
-      (pawnMovement)
-    (if ( = (colorComprobant) 2 )
-        (pawnMovement)
-        "Debe seleccionar una casilla con su ficha"
-    ); EndIf ( = (colorComprobant) 2 )
-   ); EndIf ( = (colorComprobant) 1 )
- ); EndFunction TurnComprobant
+  ( if (= oldPos newPos)
+       oldString
+       (if (> oldPos newPos)
+           (string-append (substring oldString 0 newPos) (~a char) (substring oldString (add1 newPos) oldPos) "x" (substring oldString (add1 oldPos)))
+           (string-append (substring oldString 0 oldPos) "x" (substring oldString (add1 oldPos) newPos) (~a char) (substring oldString (add1 newPos)))
+           );EndIf
+       );endIf
 
+  );;------------------EndFunction MakeString-----------------;;
+
+(define (newTable oldString oldPos turn )
+  
+  (define click (mouse-click-posn (get-mouse-click ventana1)))
+  (define comprobada (limites click) )
+  (define pos-xNew (pos-x comprobada))
+  (define pos-yNew (pos-y comprobada))
+  (define newPos (casilla pos-xNew pos-yNew))
+  (define makeMove (MakeString oldString (string-ref oldString oldPos) oldPos newPos))
+(if (not(equal? makeMove oldString))
+   (begin
+   (table makeMove)
+  (turns makeMove (* -1 turn )))
+   (turns oldString turn)
+   );EndIf
+  
+  )
+
+(define (turns string turn)
+  
+  (define click (mouse-click-posn (get-mouse-click ventana1)))
+  (define comprobada (limites click) )
+  (define pos-xPiece (pos-x comprobada))
+  (define pos-yPiece (pos-y comprobada))
+  (define piecePos (casilla pos-xPiece pos-yPiece))
+  
+  (define piece (colorComprobant comprobada string))
+  (define (whiteTurn)
+    (if (equal? piece -1)
+        
+          (newTable string piecePos turn)
+        (turns string turn)
+          
+        );EndIf
+    )
+  (define (blackTurn)
+    (if (equal? piece 1)
+
+        (newTable string piecePos turn)
+        
+        (turns string turn)
+          
+        );EndIf
+    )
+  (if (equal? turn -1)
+      (whiteTurn)
+      (blackTurn)
+      );EndIf
+  )
+
+(turns inicialTable -1)
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#|
 ;;Coronacion
 
 (define (coronation clickOption)
@@ -214,16 +295,18 @@
   (define selectStringB  (string-append "T" "C" "A" "D" ))
   ;Este identificador va a guardar las iniciales de las fichas Blancas
   (define selectStringW (string-append "t" "c" "a" "d") )
+  
   (define pos-x. (pos-x clickOption))
   (define pos-y. (pos-y clickOption))
   (define Option (casilla pos-x. pos-y. ))
+  
    
   ;;Esta funcion solo sirve para poner las fichas en el lateral izquierdo al momento de querer seleccionar el cambio de ficha 
   (define (PiecePutOnSelection str count)
     (define x 525)
     (define y (+ 150 (* count 50)))
     
-    ;;Si el contador es menor al tamallo de la string que llamamos 
+    ;;Si el contador es menor al tamaño de la string que llamamos 
     (if (< count (string-length str))
         
         (begin
@@ -256,5 +339,6 @@
       ); EndIf (and (>= (pawnMovement) 0) (<= (pawnMovement) 7)...#\p))
   );EndFunction Coronation
 
+ (coronation (mouse-click-posn (get-mouse-click ventana1)))
 
-
+|#
