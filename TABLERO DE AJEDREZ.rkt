@@ -69,15 +69,15 @@
 
 ;La funcion PieceForDisplay pondrá todas las piezas en orden dependiendo de la string dada
 ;string será la string a mostrar, counter será un contador y viewport será el viewport en el que lo dibujemos
-(define (PieceForDisplay string counter viewport)
-  (if (< counter (string-length string))
+(define (PieceForDisplay str counter viewport)
+  (if (< counter (string-length str))
       ;si recibe el caracter z no pondrá ninguna imagen
-      (if (equal? (string-ref string counter) #\z)
-          (PieceForDisplay string (+ counter 1) viewport)
+      (if (equal? (string-ref str counter) #\z)
+          (PieceForDisplay str (+ counter 1) viewport)
           ;si recibe un caracter distinto a z, evaluará la imagen a colocar y la pondrá en su respectiva posición
           (begin
-            (((draw-pixmap-posn (EvaluateImage (string-ref string counter))) viewport) (make-posn (* (remainder counter 8) 50) (* 50 (quotient counter 8))))
-            (PieceForDisplay string (+ counter 1) viewport)
+            (((draw-pixmap-posn (EvaluateImage (string-ref str counter))) viewport) (make-posn (* (remainder counter 8) 50) (* 50 (quotient counter 8))))
+            (PieceForDisplay str (+ counter 1) viewport)
             );end begin
           );end if equal? string-ref #\z
       ;else,
@@ -86,33 +86,33 @@
   );end define PieceForDisplay
 ;La funcion DrawBoard pondrá una tabla por encima de las piezas del turno anterior
 ;string será la string con la cual llamaremos a PieceForDisplay
-(define (DrawBoard string)
+(define (DrawBoard str)
   ((draw-pixmap chess) "Tablero 8x8.png" (make-posn 0 0))
-  (PieceForDisplay string 0 chess)
+  (PieceForDisplay str 0 chess)
   );end define DrawBoard
   
 ;CheckTurn va a llamar al siguiente turno. si recibe playerTurn=0, el siguiente turno será de las blancas; de lo contrario,
 ;si recibe playerTurn=1, el siguiente turno será de las negras.
 ;arrastramos tambien string ya que la necesitaremos en cualquiera de ambas funciones que llamemos
-(define (CheckTurn playerTurn string)
+(define (CheckTurn playerTurn str)
   (if (equal? playerTurn 1)
-      (WhiteTurn string)
-      (BlackTurn string)
+      (WhiteTurn str)
+      (BlackTurn str)
       );end if playerTurn=1
   );end define CheckTurn
 
 ;la funcion PieceColor? revisará si la pieza es de color blanco, negro o si no hay ninguna pieza.
 ;string sera la string a evaluar e index será el subindice de la string que evaluaremos
-(define (PieceColor? string index)
+(define (PieceColor? str index)
   ;si la pieza es blanca (mayúscula) devolverá 1
   (if (or
-       (equal? (string-ref string index) #\P) (equal? (string-ref string index) #\T) (equal? (string-ref string index) #\C)
-       (equal? (string-ref string index) #\A) (equal? (string-ref string index) #\R) (equal? (string-ref string index) #\D))
+       (equal? (string-ref str index) #\P) (equal? (string-ref str index) #\T) (equal? (string-ref str index) #\C)
+       (equal? (string-ref str index) #\A) (equal? (string-ref str index) #\R) (equal? (string-ref str index) #\D))
       1
       ;si la pieza es negra (minúscula) devolverá -1
       (if (or
-           (equal? (string-ref string index) #\p) (equal? (string-ref string index) #\t) (equal? (string-ref string index) #\c)
-           (equal? (string-ref string index) #\a) (equal? (string-ref string index) #\r) (equal? (string-ref string index) #\d))
+           (equal? (string-ref str index) #\p) (equal? (string-ref str index) #\t) (equal? (string-ref str index) #\c)
+           (equal? (string-ref str index) #\a) (equal? (string-ref str index) #\r) (equal? (string-ref str index) #\d))
           -1
           ;si no es ninguna, devolverá 0
           0
@@ -160,30 +160,33 @@
   ((draw-string chess) (make-posn 479 198) "Sigues" "white")
   ((draw-string chess) (make-posn 473 212) "en jaque!" "white")
   );end define InvalidMoveCheck
-       
 
-;esta es la funcion que genera el movimiento, y engloba a todas las funciones de movimiento de cada pieza
-;string será la string del turno anterior
-;column será una position-x
-;row será una position-y
-;newPos será un click de mouse, con el cual crearemos la casilla de la siguiente posicion
-;currentTurn indica el turno actual, blancas o negras
-(define (MovePiece string column row newPos currentTurn)
-  ;definimos las posiciones de casillas clickeadas como identificadores newPos-x y newPos-y
-  (define newPos-x (position-x newPos))
-  (define newPos-y (position-y newPos))
-  ;definimos como oldSquare la casilla donde estaba la ficha originalmente
-  (define oldSquare (square column row))
-  ;definimos como newSquare la casilla a la que queremos moverla
-  (define newSquare (square newPos-x newPos-y))
-  ;definimos como madeMove la string para la posicion del siguiente turno, con el movimiento que deseamos realizar ya efectuado
-  (define madeMove (MakeNewString (string-ref string oldSquare) string oldSquare newSquare))
-  ;revisamos si el segundo click está después de los limites del tablero
-   (if (> newPos-x 7)
-       (CheckTurn currentTurn string)
-       (void))
-
-  ;definimos la funcion para la coronacion de peones
+(define (Mate? mateStr piecePos pieceSquare turn)
+    (define break? (MakeNewString (string-ref mateStr piecePos) mateStr piecePos pieceSquare))
+    (if (GiveCheck? mateStr (* turn -1))
+            (if
+             (or (= (PieceColor? mateStr piecePos) turn) (equal? (string-ref mateStr piecePos) #\z))
+                    (if (= piecePos 63) #t (Mate? mateStr (+ piecePos 1) 0 turn))
+                    (if (and
+                         (not (GiveCheck? break? (* turn -1)))
+                         (equal? (Movements mateStr piecePos pieceSquare (quotient piecePos 8) (remainder piecePos 8) (* turn -1)) #t))    
+                     #f
+                     (if (= pieceSquare 63)
+                         (if (= piecePos 63) #t (Mate? mateStr (+ piecePos 1) 0 turn)) (Mate? mateStr piecePos (+ pieceSquare 1) turn))) ;end if not GiveCheck?
+                );end if or
+        #f );end if GiveCheck?
+    );end define Mate?
+(define (MateScreen turn)
+    (if (= turn 1)
+         (begin
+           ((draw-solid-rectangle chess) (make-posn 100 132) 200 132 "white")
+           ((draw-string chess) (make-posn 150 190) "JAQUE MATE" "brown")
+           ((draw-string chess) (make-posn 153 210) "Ganan blancas!" "brown"))
+        (begin ((draw-solid-rectangle chess) (make-posn 100 132) 200 132 "black")
+               ((draw-string chess) (make-posn 150 190) "JAQUE MATE" "white")
+               ((draw-string chess) (make-posn 153 210) "Ganan negras!" "white")))
+        ((draw-rectangle chess) (make-posn 101 133) 198 130 "brown"))
+ ;definimos la funcion para la coronacion de peones
 (define (Coronation strBoard position pieceColor)
   ;damos un mensaje para que el jugador sepa que debe esperar para escoger su pieza
          ((draw-rectangle chess) (make-posn 440 180) 120 40 "black")
@@ -207,9 +210,9 @@
     (if (= color 1)
         (begin (close-viewport coronationWindow) ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "brown")
                (DrawBoard coronationStringWhite)
-               (if (GiveCheck? coronationStringWhite (* currentTurn -1))
-                   (if (Mate? coronationStringWhite 0 0)
-                       (begin (MateScreen) (FinishGame));end begin
+               (if (GiveCheck? coronationStringWhite (* color -1))
+                   (if (Mate? coronationStringWhite 0 0 color)
+                       (begin (MateScreen color) (FinishGame));end begin
                        (MoveOnCheck));end if Mate?
                    (void));end if GiveCheck?
                (CheckTurn (* pieceColor -1) (CoronationString strBoard position (string-ref "ACTD" click)))
@@ -217,9 +220,9 @@
         ;si el color no es 1, usará las piezas con caracteres de letra minuscula (los cuales representan piezas negras)
         (begin (close-viewport coronationWindow) ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "brown")
                (DrawBoard coronationStringBlack)              
-               (if (GiveCheck? coronationStringBlack (* currentTurn -1))
-                   (if (Mate? coronationStringBlack 0 0)
-                       (begin (MateScreen) (FinishGame));end begin
+               (if (GiveCheck? coronationStringBlack (* color -1))
+                   (if (Mate? coronationStringBlack 0 0 color)
+                       (begin (MateScreen color) (FinishGame));end begin
                        (MoveOnCheck));end if Mate?
                    (void));end if GiveCheck
                (CheckTurn (* pieceColor -1) coronationStringBlack)
@@ -235,6 +238,7 @@
       );end if = pieceColor 1
   (ChoosePiece pieceColor)
   );end define Coronation
+
 
   ;revisa si una casilla está diagonal a otra, si lo está devuelve la distancia en la string entre las casillas
   ;pos es un contador, a es la casilla inicial y b es la casilla destino
@@ -302,10 +306,10 @@
         ;si el contador pos llega a cero, devolvemos 0, lo cual significa que la casilla no está lateral a la otra
         (if (equal? pos 0) 0
             ;si se cumplen alguno de estos casos, devuelve 8 o pos, dependiendo de la orientación
-            (if (equal? b (+ a (* pos 8))) 8 ;devuelve 8, indicando que se mueve en vertical
-            (if (equal? b (+ a pos)) pos ;devuelve pos, indicando a cuantas casillas está hacia la izquierda o derecha
-            (if (equal? a (+ b (* pos 8))) -8 ;devuelve 8, indicando que se mueve en vertical
-            (if (equal? a (+ b pos)) (- pos) ;devuelve pos, indicando a cuantas casillas está hacia la izquierda o derecha
+            (if (equal? b (+ a (* pos 8))) 8 ;devuelve 8, indicando que se mueve hacia abajo
+            (if (equal? b (+ a pos)) 1 ;devuelve 1, indicando que se mueve hacia la derecha
+            (if (equal? a (+ b (* pos 8))) -8 ;devuelve -8, indicando que se mueve hacia arriba
+            (if (equal? a (+ b pos)) -1 ;devuelve -1, indicando que se mueve hacia la izquierda
                 ;si ninguno se cumple, reducimos pos y evaluamos de nuevo
                 (LateralDirection? (- pos 1) a b)
                 );end if equal... -pos
@@ -466,12 +470,13 @@
   ;para que los alfiles, torres y reinas no puedan saltarse otras fichas
   ;string será la string a revisar, pos será un contador, direction será la dirección en la que
   ;está una casilla en relación a otra, a y b serán casillas (subindices de la string)
-  (define (Restrictions string pos direction a b)
+  (define (Restrictions str pos direction a b)
     ;si pos llega a cero devuelve cero, lo cual significaría que no hay restriccion
-    (if (or (= pos 0) (= direction 0)) 0   
+    (if (= pos 0) 0
             ;Revisa recursivamente si estan vacias las casillas entre las posiciones dadas
-            (if (equal? (string-ref string (+ a pos)) #\z)
-                (Restrictions string (- pos direction) direction a b) 1) ;end if equal? string-ref
+            (if (equal? (string-ref str (+ a pos)) #\z)
+                (Restrictions str (- pos direction) direction a b)
+                1) ;end if equal? string-ref
             );end if = pos 0
     );end define Restrictions
 
@@ -496,18 +501,14 @@
     ((draw-rectangle chess) (make-posn 440 180) 120 40 "black")
     ((draw-string chess) (make-posn 475 206) "JAQUE" "white"))
 
-    (if (GiveCheck? madeMove currentTurn)
-      (begin (InvalidMoveCheck) (CheckTurn currentTurn string))
-      (void))
-  (if (GiveCheck? madeMove (* currentTurn -1))
-      (MoveOnCheck)
-      (void))
-
+  
 (define (Movements str oldSq newSq rowPiece columnPiece turn)
   ;Movimiento de los peones blancos. Se separa de los peones negros debido a la dirección de avance de cada uno de ellos.
   (define (WhitePawn)
+    (define newPos-x (remainder newSq 8))
+    (define newPos-y (quotient newSq 8))
     ;revisa si está en la fila 7 del tablero (la cual es nombrada fila 6 en la string), para permitir el doble avance del peón
-    (if (and (= rowPiece 6) (= oldSq (+ newSq 16)) (equal? (string-ref str newSq) #\z))
+    (if (and (= rowPiece 6) (= oldSq (+ newSq 16)) (equal? (string-ref str newSq) #\z) (equal? (string-ref str (+ newSq 8)) #\z))
         #t
         (begin
           ;si no está en la fila 7, revisa si la casilla seleccionada está justo adelante del peón, para permitir su avance
@@ -519,7 +520,7 @@
                   );end if = * 8 newPos-y 0
               ;si no se cumple, revisa si está en diagonal al peón y hay otra pieza allí, para permitir capturarla
               (if (and (not (equal? (string-ref str newSq) #\z))
-                       (= (PieceColor? string newSq) -1)
+                       (= (PieceColor? str newSq) -1)
                        (or  (and (= oldSq (+ newSq 7)) (> newPos-x columnPiece))
                             (and (= oldSq (+ newSq 9)) (< newPos-x columnPiece)));end or
                        ) ;end and
@@ -537,8 +538,10 @@
     );end define WhitePawn
   ;Movimiento de los peones negros. Se separa de los peones blancos debido a la dirección de avance de cada uno de ellos.
   (define (BlackPawn)
+    (define newPos-x (remainder newSq 8))
+    (define newPos-y (quotient newSq 8))
     ;revisa si está en la fila 2 del tablero (la cual es nombrada fila 1 en la string), para permitir el doble avance del peón
-    (if (and (= rowPiece 1) (= oldSq (- newSq 16)) (equal? (string-ref str newSq) #\z)) 
+    (if (and (= rowPiece 1) (= oldSq (- newSq 16)) (equal? (string-ref str newSq) #\z) (equal? (string-ref str (- newSq 8)) #\z)) 
         #t
         (begin
           ;si no está en la fila 2, revisa si la casilla seleccionada está justo adelante del peón, para permitir su avance
@@ -652,46 +655,49 @@
           );end if... (WhitePawn)
       );end if equal? (square column row) (square newPos-x newPos-y)
     );end define Movements
-  
-  (define (Mate? mateStr piecePos pieceSquare)
-    (define break? (MakeNewString (string-ref mateStr piecePos) mateStr piecePos pieceSquare))
-    (if (GiveCheck? mateStr (* currentTurn -1))
-            (if
-             (or (= (PieceColor? mateStr piecePos) currentTurn) (equal? (string-ref mateStr piecePos) #\z))
-                    (if (= piecePos 63) #t (Mate? mateStr (+ piecePos 1) 0))
-                    (if (and
-                         (not (GiveCheck? break? (* currentTurn -1)))
-                         (equal? (Movements mateStr piecePos pieceSquare (quotient piecePos 8) (remainder piecePos 8) (* currentTurn -1)) #t))    
-                     #f
-                     (if (= pieceSquare 63)
-                         (if (= piecePos 63) #t (Mate? mateStr (+ piecePos 1) 0)) (Mate? mateStr piecePos (+ pieceSquare 1)))) ;end if not GiveCheck?
-                );end if or
-        #f );end if GiveCheck?
-    );end define Mate?
-(define (MateScreen)
-    (if (= currentTurn 1)
-         (begin
-           ((draw-solid-rectangle chess) (make-posn 100 132) 200 132 "white")
-           ((draw-string chess) (make-posn 150 190) "JAQUE MATE" "brown")
-           ((draw-string chess) (make-posn 153 210) "Ganan blancas!" "brown"))
-        (begin ((draw-solid-rectangle chess) (make-posn 100 132) 200 132 "black")
-               ((draw-string chess) (make-posn 150 190) "JAQUE MATE" "white")
-               ((draw-string chess) (make-posn 153 210) "Ganan negras!" "white")))
-        ((draw-rectangle chess) (make-posn 101 133) 198 130 "brown"))
 
-(define (CallNextMove)
-  (if (Mate? madeMove 0 0)
-    (begin (DrawBoard madeMove) (MateScreen) (FinishGame))
-    (if
-    (number? (Movements string oldSquare newSquare row column currentTurn))
-    (begin (DrawBoard madeMove) (Coronation madeMove newSquare currentTurn))
-    (if (equal? (Movements string oldSquare newSquare row column currentTurn) #t)
-    (begin (DrawBoard madeMove) (CheckTurn (* currentTurn -1) madeMove))
-    (begin (InvalidMove) (CheckTurn currentTurn string))
-    );if equal? Movements #t
-    );end if Movements
-    );end if Mate?
-  );end define CallNextMove
+;esta es la funcion que genera el movimiento, y engloba a todas las funciones de movimiento de cada pieza
+;string será la string del turno anterior
+;column será una position-x
+;row será una position-y
+;newPos será un click de mouse, con el cual crearemos la casilla de la siguiente posicion
+;currentTurn indica el turno actual, blancas o negras
+(define (MovePiece str column row newPos currentTurn)
+  ;definimos las posiciones de casillas clickeadas como identificadores newPos-x y newPos-y
+  (define newPos-x (position-x newPos))
+  (define newPos-y (position-y newPos))
+  ;definimos como oldSquare la casilla donde estaba la ficha originalmente
+  (define oldSquare (square column row))
+  ;definimos como newSquare la casilla a la que queremos moverla
+  (define newSquare (square newPos-x newPos-y))
+  ;definimos como madeMove la string para la posicion del siguiente turno, con el movimiento que deseamos realizar ya efectuado
+  (define madeMove (MakeNewString (string-ref str oldSquare) str oldSquare newSquare))
+  (if (and (< (posn-x newPos) 560) (> (posn-x newPos) 440) (< (posn-y newPos) 370) (> (posn-y newPos) 350))
+      (close-viewport chess)
+      (void))
+  ;revisamos si el segundo click está después de los limites del tablero
+   (if (> newPos-x 7)
+       (CheckTurn currentTurn str)
+       (void))
+  (if (GiveCheck? madeMove (* currentTurn -1))
+      (MoveOnCheck)
+      (void))
+  (if (and (GiveCheck? str currentTurn) (GiveCheck? madeMove currentTurn))
+      (begin (InvalidMoveCheck) (CheckTurn currentTurn str))
+      (void))
+  (if (GiveCheck? madeMove currentTurn)
+      (begin (InvalidMove) (CheckTurn currentTurn str))
+      (void))
+  
+  (define (CallNextMove)
+        (if (number? (Movements str oldSquare newSquare row column currentTurn))
+            (begin (DrawBoard madeMove) (Coronation madeMove newSquare currentTurn))
+            (if (equal? (Movements str oldSquare newSquare row column currentTurn) #t)
+                (begin (DrawBoard madeMove) (CheckTurn (* currentTurn -1) madeMove))
+                (begin (InvalidMove) (CheckTurn currentTurn str))
+                );if equal? Movements #t
+            );end if Movements
+    );end define CallNextMove
   (CallNextMove)
   );end define MovePiece
 
@@ -702,9 +708,15 @@
       (FinishGame)))
 
 ;funcion para el turno de las fichas blancas
-(define (WhiteTurn string)
+(define (WhiteTurn str)
   ((draw-solid-rectangle chess) (make-posn 440 130) 120 40 "white")
-  ((draw-string chess) (make-posn 465 155) "BLANCAS" "black")
+  ((draw-string chess) (make-posn 465 155) "BLANCAS" "black")  
+  (if (Mate? str 0 0 -1)
+        (begin (MateScreen -1) (FinishGame))
+        (void));end if Mate?
+    (if (Mate? str 0 0 1)
+        (begin (MateScreen 1) (FinishGame))
+        (void));end if Mate?
   ;definimos la posicion de la pieza que queremos mover y sus correspondientes casillas
   (define pieceClick1 (mouse-click-posn (get-mouse-click chess)))
   ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "brown")
@@ -713,26 +725,32 @@
   (if (and (< (posn-x pieceClick1) 560) (> (posn-x pieceClick1) 440) (< (posn-y pieceClick1) 370) (> (posn-y pieceClick1) 350))
       (close-viewport chess)
   ;si la posicion clickeada se sale del tablero o su pieza no es del color correcto o está vacia, pedirá clickear de nuevo
-  (if (or (>= piecePosx 8) (equal? (PieceColor? string (square piecePosx piecePosy)) 0))
-      (WhiteTurn string)
+  (if (or (>= piecePosx 8) (equal? (PieceColor? str (square piecePosx piecePosy)) 0))
+      (WhiteTurn str)
       (if
-       (equal? (PieceColor? string (square piecePosx piecePosy)) -1)
+       (equal? (PieceColor? str (square piecePosx piecePosy)) -1)
        (begin
          ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "black")
          ((draw-string chess) (make-posn 480 195) "No es" "white")
          ((draw-string chess) (make-posn 475 215) "tu turno!" "white")
-         (WhiteTurn string))
+         (WhiteTurn str))
        ;si la posicion tiene una pieza correcta, llamará a MovePiece con otro click más, esta vez para la casilla destino
-       (MovePiece string piecePosx piecePosy (mouse-click-posn (get-mouse-click chess)) 1)
+       (MovePiece str piecePosx piecePosy (mouse-click-posn (get-mouse-click chess)) 1)
        );end if not equal? PieceColor? 1
       );end if >= piecePosx 8
     );end if and posn-x...
   );end define WhiteTurn
 
 ;funcion para el turno de las fichas negras
-(define (BlackTurn string)
+(define (BlackTurn str)
   ((draw-solid-rectangle chess) (make-posn 440 130) 120 40 "black")
   ((draw-string chess) (make-posn 470 155) "NEGRAS" "white")
+  (if (Mate? str 0 0 1)
+        (begin (MateScreen 1) (FinishGame))
+        (void));end if Mate?
+    (if (Mate? str 0 0 -1)
+        (begin (MateScreen -1) (FinishGame))
+        (void));end if Mate?
   ;definimos  como pieceClick1 la posicion de la pieza que queremos mover y sus correspondientes casillas
   (define pieceClick1 (mouse-click-posn (get-mouse-click chess)))
   ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "brown")
@@ -741,17 +759,17 @@
   (if (and (< (posn-x pieceClick1) 560) (> (posn-x pieceClick1) 440) (< (posn-y pieceClick1) 370) (> (posn-y pieceClick1) 350))
       (close-viewport chess)
   ;si la posicion clickeada se sale del tablero o su pieza no es del color correcto o está vacia, pedirá clickear de nuevo
-  (if (or (>= piecePosx 8) (equal? (PieceColor? string (square piecePosx piecePosy)) 0))
-      (BlackTurn string) 
+  (if (or (>= piecePosx 8) (equal? (PieceColor? str (square piecePosx piecePosy)) 0))
+      (BlackTurn str) 
       (if
-       (equal? (PieceColor? string (square piecePosx piecePosy)) 1)
+       (equal? (PieceColor? str (square piecePosx piecePosy)) 1)
        (begin
          ((draw-solid-rectangle chess) (make-posn 440 180) 120 40 "white")
          ((draw-string chess) (make-posn 480 195) "No es" "black")
          ((draw-string chess) (make-posn 475 215) "tu turno!" "black")
-         (BlackTurn string))
+         (BlackTurn str))
        ;si la posicion tiene una pieza correcta, llamará a MovePiece con otro click más, esta vez para la casilla destino
-       (MovePiece string piecePosx piecePosy (mouse-click-posn (get-mouse-click chess)) -1)
+       (MovePiece str piecePosx piecePosy (mouse-click-posn (get-mouse-click chess)) -1)
        );end if not equal? PieceColor? -1
       );end if >= piecePosx 8
   );end if and posn-x...
@@ -770,13 +788,13 @@
   ) ;end define beginStr
 
 (define debugStr (string-append
-                  "zzzzzzzr"
-                  "zppppppp"
-                  "zzzzzzzz"
-                  "Pzzzzzzz"
+                  "tcadract"
+                  "pppppppp"
                   "zzzzzzzz"
                   "zzzzzzzz"
-                  "zPPPPPPP"
+                  "zzzzzzzz"
+                  "zzzzzzzz"
+                  "PPPPPPPP"
                   "TCADRACT")
   )
 
@@ -785,5 +803,5 @@
 (DrawBoard str)
 (WhiteTurn str))
 
-;(StartGame beginStr)
-(StartGame debugStr)
+(StartGame beginStr)
+;(StartGame debugStr)
