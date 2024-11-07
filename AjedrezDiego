@@ -110,10 +110,10 @@
 (define inicialTable (string-append
                       "TCADRACT" ;fichas negras 
                       "PPPPPPPP" ;peones negros
+                      "Txxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
-                      "xxxxxxxx" ;espacio en blanco
-                      "xxxxxxxx" ;espacio en blanco
+                      "Txxxxxxx" ;espacio en blanco
                       "pppppppp" ;peones blancos
                       "tcadract" ;fichas blancas
                       ))
@@ -171,7 +171,7 @@
 
  (define (colorComprobant click str)
    
-   (define comprobada (limites click) )
+   (define comprobada (limites click ))
    (define pos-xComp (pos-x comprobada))
    (define pos-yComp (pos-y comprobada))
    (define Comprobant (casilla pos-xComp pos-yComp))
@@ -179,26 +179,24 @@
   (if ( or (equal? (string-ref str Comprobant) #\T ) (equal? (string-ref str Comprobant) #\C )
          (equal? (string-ref str Comprobant) #\A ) (equal? (string-ref str Comprobant) #\D )
          (equal? (string-ref str Comprobant) #\R ) (equal? (string-ref str Comprobant) #\P ));EndCondition or
-   ;Si la pieza es negra devolvera un true
+   ;Si la pieza es negra devolvera un 1
     1 ; else
     
    (if ( or (equal? (string-ref str Comprobant) #\t ) (equal? (string-ref str Comprobant) #\c )
          (equal? (string-ref str Comprobant) #\a ) (equal? (string-ref str Comprobant) #\d )
          (equal? (string-ref str Comprobant) #\r ) (equal? (string-ref str Comprobant) #\p ));EndCondition or
-    ;si la pieza es blanca devolvera un false 
+    ;si la pieza es blanca devolvera un -1 
       -1 ; else
 
       ; en caso contrario, no devuelve nada
-      0
+      (void)
    ); Endif que comprueba que las fichas son negras
   ); Endif que comprueba que las fichas son Blancas
  );;------------------EndFunction ColorComprobant-----------------;;
 
 ;;------------------StarFunction MakeString-----------------;;
 (define (MakeString oldString char oldPos newPos)
-  
-
-  ( if (= oldPos newPos)
+   ( if (= oldPos newPos)
        oldString
        (if (> oldPos newPos)
            (string-append (substring oldString 0 newPos) (~a char) (substring oldString (add1 newPos) oldPos) "x" (substring oldString (add1 oldPos)))
@@ -208,23 +206,72 @@
 
   );;------------------EndFunction MakeString-----------------;;
 
-(define (newTable oldString oldPos turn )
+;;------------------StarFunction generalMove-----------------;;
+
+(define (generalMove oldString oldPos turn)
   
   (define click (mouse-click-posn (get-mouse-click ventana1)))
+  
   (define comprobada (limites click) )
   (define pos-xNew (pos-x comprobada))
   (define pos-yNew (pos-y comprobada))
   (define newPos (casilla pos-xNew pos-yNew))
   (define makeMove (MakeString oldString (string-ref oldString oldPos) oldPos newPos))
-(if (not(equal? makeMove oldString))
-   (begin
-   (table makeMove)
-  (turns makeMove (* -1 turn )))
-   (turns oldString turn)
+  (printf "turnodoooos ~a"pos-xNew)
+
+  ;;------------------StartFunctionMovements-----------------;;
+
+(define (movements?)
+
+;;------------------StartFunction pawnMovements-----------------;;
+
+(define (pawnMovements?)
+  
+  (if (equal? turn 1 )
+      
+     (if ( and ( >= oldPos 8 ) ( <= oldPos 15 ) (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 16))
+              (equal? (string-ref oldString (- newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
+            #t
+            (if  (and (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 8))
+                      (equal? (string-ref oldString newPos) #\x))
+                #t
+                #f
+                );EndIf
+            );EndIf
+     (if ( and ( >= oldPos 48 ) ( <= oldPos 55 ) (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 16))
+               (equal? (string-ref oldString (+ newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
+            #t
+            (if  (and (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 8))
+                      (equal? (string-ref oldString newPos) #\x))
+                #t
+                #f
+                );EndIf
+            
+     );;EndIf
    );EndIf
   
-  )
+  );;------------------EndFunction pawnMovements-----------------;;
 
+  (if (= oldPos newPos)
+      #f
+     (pawnMovements?))
+  
+ );;------------------EndFunction movements?-----------------;;
+
+  (if (movements?)
+      (if (not (equal? makeMove oldString))
+          (begin
+            (table makeMove)
+            (turns makeMove (* -1 turn )))
+          (turns oldString turn)
+          );EndIf
+      (turns oldString turn)
+      );endIf
+      
+  
+  );;------------------EndFunction generalMove-----------------;;
+
+;;------------------StartFunction turns-----------------;;
 (define (turns string turn)
   
   (define click (mouse-click-posn (get-mouse-click ventana1)))
@@ -232,20 +279,23 @@
   (define pos-xPiece (pos-x comprobada))
   (define pos-yPiece (pos-y comprobada))
   (define piecePos (casilla pos-xPiece pos-yPiece))
-  
   (define piece (colorComprobant comprobada string))
+  (printf "turnooo1")
+  
   (define (whiteTurn)
+    
     (if (equal? piece -1)
         
-          (newTable string piecePos turn)
+          (generalMove string piecePos turn)
+        
         (turns string turn)
-          
         );EndIf
     )
   (define (blackTurn)
+    
     (if (equal? piece 1)
 
-        (newTable string piecePos turn)
+        (generalMove string piecePos turn)
         
         (turns string turn)
           
@@ -255,10 +305,27 @@
       (whiteTurn)
       (blackTurn)
       );EndIf
-  )
+  );;------------------EndFunction turns-----------------;;
+
+
 
 (turns inicialTable -1)
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
