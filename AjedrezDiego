@@ -225,30 +225,38 @@
 
 ;;------------------StartFunction pawnMovements-----------------;;
 
-(define (pawnMovements?)
+  (define (pawnMovements?)
   
-  (if (equal? turn 1 )
+    (if (equal? turn 1 )
       
-     (if ( and ( >= oldPos 8 ) ( <= oldPos 15 ) (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 16))
-              (equal? (string-ref oldString (- newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
+        (if ( and ( >= oldPos 8 ) ( <= oldPos 15 ) (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 16))
+                  (equal? (string-ref oldString (- newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 8))
                       (equal? (string-ref oldString newPos) #\x))
-                #t
-                #f
-                );EndIf
+                 #t
+                 (if (and (equal? (string-ref oldString oldPos) #\P) (or (= oldPos (- newPos 7)) (= oldPos (- newPos 9)))
+                          (equal? (colorComprobant comprobada oldString) -1 )) 
+                     #t
+                     #f
+                 );;EndIf
             );EndIf
-     (if ( and ( >= oldPos 48 ) ( <= oldPos 55 ) (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 16))
-               (equal? (string-ref oldString (+ newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
+        );EndIf
+        
+        (if ( and ( >= oldPos 48 ) ( <= oldPos 55 ) (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 16))
+                  (equal? (string-ref oldString (+ newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 8))
                       (equal? (string-ref oldString newPos) #\x))
-                #t
-                #f
-                );EndIf
-            
-     );;EndIf
-   );EndIf
+                 #t
+                 (if (and (equal? (string-ref oldString oldPos) #\p) (or (= oldPos (+ newPos 7)) (= oldPos (+ newPos 9)))
+                          (equal? (colorComprobant comprobada oldString) 1 )) 
+                     #t
+                     #f
+                 );;EndIf
+            );EndIf
+        );;EndIf
+    );EndIf
   
   );;------------------EndFunction pawnMovements-----------------;;
 
@@ -313,47 +321,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#|
 ;;Coronacion
 
 (define (coronation clickOption)
@@ -406,6 +373,4 @@
       ); EndIf (and (>= (pawnMovement) 0) (<= (pawnMovement) 7)...#\p))
   );EndFunction Coronation
 
- (coronation (mouse-click-posn (get-mouse-click ventana1)))
-
-|#
+ 
