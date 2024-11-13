@@ -144,7 +144,7 @@
 ;;------------------StartFunction Casillas-----------------;;
 
 ;;Aqui creamos una funcion global que facilitara los clicks en todo el codigo
-;;funcion (casilla a b) cuando se llamara tomara los diferentes
+;;funcion (casilla a b) cuando se llame tomara los diferentes
 ;;parametros que le asignaremos en las demas funciones
 
 (define (casilla a b)
@@ -155,6 +155,10 @@
 ;;------------------EndFunction Casillas-----------------;;
 
 ;;------------------StarFunction CasillasLimite-----------------;;
+
+;;Esta funcion se llamara cuando necesitemos siempre que necesitemos un click
+;;Pues esta funcion tiene como proposito evitar que se permitan los click's
+;;Fuera del tablero de ajedrez
 (define (limites posn)
 
   (define posnx (posn-x posn))
@@ -168,6 +172,10 @@
 
 
 ;;------------------StartFunction ColorComprobant-----------------;;
+
+;;colorComprobant: Esta funcion tomara el click del usuario y la str que evaluara
+;;segun el click que demos sabremos a que pieza nos referimos
+;;Sirve para comprobar si la pieza que se oprime en el primer click es del turno al que correspode
 
  (define (colorComprobant click str)
    
@@ -189,12 +197,14 @@
       -1 ; else
 
       ; en caso contrario, no devuelve nada
-      (void)
+      "" 
    ); Endif que comprueba que las fichas son negras
   ); Endif que comprueba que las fichas son Blancas
  );;------------------EndFunction ColorComprobant-----------------;;
 
 ;;------------------StarFunction MakeString-----------------;;
+
+;;MakeString: Esta funcion, estara actualizando las fichas del tablero según los movimientos que se hagan durante el juego
 (define (MakeString oldString char oldPos newPos)
    ( if (= oldPos newPos)
        oldString
@@ -208,10 +218,12 @@
 
 ;;------------------StarFunction generalMove-----------------;;
 
+;;generalMove: Esta función tomara una string y el primer click que se da, esperando que sea de la ficha correspondiente
+;;para poder generar el movimiento adecuado
+
 (define (generalMove oldString oldPos turn)
   
   (define click (mouse-click-posn (get-mouse-click ventana1)))
-  
   (define comprobada (limites click) )
   (define pos-xNew (pos-x comprobada))
   (define pos-yNew (pos-y comprobada))
@@ -221,12 +233,17 @@
 
   ;;------------------StartFunctionMovements-----------------;;
 
+  ;;Esta funcion tomaras posibilidades de hacer un movimiento, para mas tarde utilizarla en los jaques
+
 (define (movements?)
 
 ;;------------------StartFunction pawnMovements-----------------;;
 
+  ;;Aquí definimos la funcion del movimiento del peon no toma valores, pues ya los tomamos en la funcion inicial (generalMove)
+
   (define (pawnMovements?)
-  
+
+    ;;Esta condicion de aqui, es si el turno es equivalente a 1 (es decir, se mueven las fichas negras)
     (if (equal? turn 1 )
       
         (if ( and ( >= oldPos 8 ) ( <= oldPos 15 ) (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 16))
@@ -242,7 +259,8 @@
                  );;EndIf
             );EndIf
         );EndIf
-        
+
+        ;;Esta condicion de aqui, es si el turno es equivalente a -1 (es decir, se mueven las fichas blancas)
         (if ( and ( >= oldPos 48 ) ( <= oldPos 55 ) (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 16))
                   (equal? (string-ref oldString (+ newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
             #t
@@ -260,19 +278,28 @@
   
   );;------------------EndFunction pawnMovements-----------------;;
 
+  ;;Esta condicion, es para evitar que el usuario clickee en la misma posicion y pierda su turno,
+  ;;Si la posicion anterior es diferente a la posicion actual, entonces llamaremos a pawnMovements
+  ;;(inicialmente debe de llamar a los movimientos en general)
   (if (= oldPos newPos)
       #f
      (pawnMovements?))
   
  );;------------------EndFunction movements?-----------------;;
 
+  ;;Esta comparacion, ve lo que devuelve (movements?) recordemos que esta funcion solo devuelve #t o #f
+  ;;En caso de que sea #t entonces observara si el makeMove no es igual a oldString esto para poder mostrar el movimiento
+  ;;En pantalla y llamar a (turns) pero multiplicandolo por -1 para que devuelva el turno contrario al que ya jugó
   (if (movements?)
       (if (not (equal? makeMove oldString))
           (begin
             (table makeMove)
             (turns makeMove (* -1 turn )))
+          ;;Si son iguales entonces llama a turns sin modificar ni el tablero ni el turno
           (turns oldString turn)
           );EndIf
+      ;;Si (movements?) es falso entonces llama a turns sin modificar ni el tablero ni el turno
+      ;;supongo que esto realmente debera llamar a la funcion de jaque mate...
       (turns oldString turn)
       );endIf
       
@@ -280,6 +307,9 @@
   );;------------------EndFunction generalMove-----------------;;
 
 ;;------------------StartFunction turns-----------------;;
+
+;;turns: La funcion turns recibira una string (que sera la que se modificara EN CASO de que se deba modificar)
+;;Y recibira el turno (que se debera modificar EN CASO de que la jugada haya sido valida
 (define (turns string turn)
   
   (define click (mouse-click-posn (get-mouse-click ventana1)))
@@ -287,32 +317,59 @@
   (define pos-xPiece (pos-x comprobada))
   (define pos-yPiece (pos-y comprobada))
   (define piecePos (casilla pos-xPiece pos-yPiece))
+  ;;piece: guardara la informacion que devuelva colorComprobant
+  ;;(recordemos que colorComprobant devuelve -1 o 1)
   (define piece (colorComprobant comprobada string))
-  (printf "turnooo1")
+
+ ;;whiteTurn evaluara si la pieza a la que nos referimos es blanca
+ ;;Mostrara en pantalla un recuadro que dira si mueven las blancas
+ ;;EN CASO de que no clickee una ficha blanca mostrara un recuadro
+ ;;diciendo "no es una ficha blanca" y no perdera el turno
   
   (define (whiteTurn)
     
     (if (equal? piece -1)
-        
-          (generalMove string piecePos turn)
-        
-        (turns string turn)
+          (begin
+            (printf "mueven las blancas\n")
+            (generalMove string piecePos turn)
+            );EndBegin;else
+        (begin
+          (printf "no es una ficha blanca\n")
+          (turns string turn)
+          );endBegin 
         );EndIf
-    )
+    
+    );endDefine whiteTurn
+
+  ;;blackTurn evaluara si la pieza a la que nos referimos es negra
+ ;;Mostrara en pantalla un recuadro que dira que mueven las negras
+ ;;EN CASO de que no clickee una ficha negra mostrara un recuadro
+ ;;diciendo "no es una ficha negra" y no perdera el turno
+  
   (define (blackTurn)
     
     (if (equal? piece 1)
+        (begin
+          (printf "mueven las negras\n")
+          (generalMove string piecePos turn)
+          );endBegin
+        (begin
+          (printf "no es una ficha negra\n")
+          (turns string turn)
+          );;endBegin
+        );;EndIf
+    
+    );;EndDefine blackTurn
 
-        (generalMove string piecePos turn)
-        
-        (turns string turn)
-          
-        );EndIf
-    )
+  ;;Lo primero que hará la funcion turns es evaluar si "turn" es igual a -1
+  ;;si es #t entonces llamara la funcion (whiteTurn)
+  ;;(recordemos que siempre empieza la partida moviendo las fichas blancas)
+  ;;En caso contrario llamara a (blackTurn)
   (if (equal? turn -1)
       (whiteTurn)
       (blackTurn)
       );EndIf
+  
   );;------------------EndFunction turns-----------------;;
 
 
@@ -323,7 +380,7 @@
 
 ;;Coronacion
 
-(define (coronation clickOption)
+(define (coronation clickOption str)
   
   ;Este identificador va a guardar las iniciales de las fichas Negras
   (define selectStringB  (string-append "T" "C" "A" "D" ))
@@ -367,7 +424,7 @@
           
           (PiecePutOnSelection selectStringB 0)
      
-          (coronation (mouse-click-posn (get-mouse-click ventana1)))
+          (coronation (mouse-click-posn (get-mouse-click ventana1)) str)
 
           ) ;EndIf (and (>= (pawnMovement) 56) (<= (pawnMovement) 63)...#\P))
       ); EndIf (and (>= (pawnMovement) 0) (<= (pawnMovement) 7)...#\p))
