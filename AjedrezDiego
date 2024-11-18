@@ -250,15 +250,34 @@
             );;EndIf
         );;EndIf
 
-    )
+    );;EndFunction directionLine
 
+  ;;Este identificador dara la dirección que tomaran las diagonales que haga la ficha
+  (define directionDiagonal
+
+    (if (and (> xPosFinal xPosInitial)  (> yPosFinal yPosInitial))
+        9
+        (if (and (> xPosFinal xPosInitial) (< yPosFinal yPosInitial))
+            -7
+            (if (and (< xPosFinal xPosInitial)  (> yPosFinal yPosInitial))
+                -9
+                (if (and (< xPosFinal xPosInitial) (< yPosFinal yPosInitial))
+                    7
+                    #f
+                    );;EndIf
+                );;EndIf
+            );;EndIf
+        );;EndIf
+);;End directionLine
+  
   ;;Esta función revisara si en el trayecto de la pieza, está misma no salta alguna otra ficha
   ;;o se come alguna pieza de su misma clase
   ;;Adicionalmente comprobamos que no se coma al rey MUJEJEJE
   
-  (define (nonJump stop)
+  (define (nonJump stop direc)
     (displayln directionLine)
     (displayln stop)
+    
     ;;Esta condicion la hacemos para determinar el turno en que estamos y el camino que tomara la comprobación
     ;;Empieza revisando si el turno es de las fichas negras
     (if  (equal? currentTurn 1 )
@@ -270,9 +289,9 @@
              ;;Esta condicion hara el recorrido por la string corroborando que el camino esta libre
              (if (or (equal? (string-ref str (+ inicialPos stop)) #\x) (equal? (colorComprobant endPos str) -1 ))
                  ;;Esta es la condicion de parada
-                 (if (= stop directionLine)
+                 (if (= stop direc)
                      #t
-                     (nonJump (- stop directionLine))
+                     (nonJump (- stop direc) direc)
                      );;EndIf
                   #f
                  )
@@ -287,7 +306,7 @@
                  ;;Esta es la condicion de parada
                  (if (= stop directionLine)
                      #t
-                     (nonJump (- stop directionLine))
+                     (nonJump (- stop direc) direc)
                      );EndIf
                   #f
                  )
@@ -301,7 +320,7 @@
   ;;La logica se basa en que para que un movimiento sea lineal entonces
   ;;En las posiciones x o y solo se modificara uno de los dos valores
 
-  (define (inMoveLine )
+  (define (inMoveLine)
 
     ;;Esta condicion revisara si la ficha seleccionada se puede mover recto o no 
     (if (or (equal? (string-ref str inicialPos) #\T ) (equal? (string-ref str inicialPos) #\t );;Aqui evaluamos las torres
@@ -309,7 +328,7 @@
             (equal? (string-ref str inicialPos) #\R ) (equal? (string-ref str inicialPos) #\r );;Aqui evaluamos el rey 
             (equal? (string-ref str inicialPos) #\P ) (equal? (string-ref str inicialPos) #\p );;Aqui evaluamos los peones
             );;EndCondition
-        (if (nonJump distance)
+        (if (nonJump distance directionLine)
             "El movimiento es recto"
             "El movimiento no es recto"
             );;EndIf
@@ -317,6 +336,28 @@
         );;EndIf
 
     );EndFunction inMoveLine
+
+  ;;Esta funcion determinara si el movimiento en diagonal es legal o no
+  (define (inDiagonalMove)
+    
+    (if (equal? currentTurn 1 )
+        (if (or (equal? (string-ref str inicialPos) #\A) (equal? (string-ref str inicialPos) #\D))
+            (if (nonJump distance directionDiagonal )
+                "El movimiento es valido"
+                "El movimiento es invalido"
+                );;EndIf
+            "La ficha seleccionada no se mueve en diagonal o no es una ficha Blanca"
+            );;EndIf
+        (if (or (equal? (string-ref str inicialPos) #\a) (equal? (string-ref str inicialPos) #\d))
+            
+            (if (nonJump distance directionDiagonal )
+                "El movimiento es valido"
+                "El movimiento es invalido"
+                );;EndIf
+            "la ficha seleccionada no se mueve en diagonal o no es una ficha Blanca"
+            );;EndIf
+        );;EndIf
+    );;EndFunction inDiagonalMove
 
   (inMoveLine)
   
@@ -404,11 +445,11 @@
                   (equal? (string-ref oldString (- newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 8))
-                      (equal? (string-ref oldString newPos) #\x) (coronation newPos oldString))
+                      (equal? (string-ref oldString newPos) #\x))
                 
                  #t
                  (if (and (equal? (string-ref oldString oldPos) #\P) (or (= oldPos (- newPos 7)) (= oldPos (- newPos 9)))
-                          (equal? (colorComprobant newPos oldString) -1 ) (coronation newPos oldString)) 
+                          (equal? (colorComprobant newPos oldString) -1 )) 
                      #t
                      #f
                      );;EndIf
@@ -420,10 +461,10 @@
                   (equal? (string-ref oldString (+ newPos 8)) #\x) (equal? (string-ref oldString newPos) #\x))
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 8))
-                      (equal? (string-ref oldString newPos) #\x) (coronation newPos oldString))
+                      (equal? (string-ref oldString newPos) #\x))
                  #t
-                 (if (or (and (equal? (string-ref oldString oldPos) #\p) (or (= oldPos (+ newPos 7)) (= oldPos (+ newPos 9)))
-                          (equal? (colorComprobant newPos oldString) 1 )) (coronation newPos oldString) ) 
+                 (if (and (equal? (string-ref oldString oldPos) #\p) (or (= oldPos (+ newPos 7)) (= oldPos (+ newPos 9)))
+                          (equal? (colorComprobant newPos oldString) 1 )) 
                      #t
                      #f
                      );;EndIf
@@ -527,4 +568,9 @@
   
   );;------------------EndFunction turns-----------------;;
 
+
+
 (turns inicialTable -1)
+
+
+ 
