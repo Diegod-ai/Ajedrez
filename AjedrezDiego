@@ -109,12 +109,12 @@
 ; InicialTable nos muestra el tablero inicial
 (define inicialTable (string-append
                       "TCADRACT" ;fichas negras 
-                      "pPPPPPPP" ;peones negros
+                      "RRRRRRRR" ;peones negros
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
-                      "pPpppppp" ;peones blancos
+                      "RRRRRRRR" ;peones blancos
                       "tcadract" ;fichas blancas
                       ))
 
@@ -213,16 +213,16 @@
 
 
 ;;------------------StarFunction restrictions-----------------;;
-(define (restrictions str inicialPos endPos currentTurn)
+(define (restrictions str inicialPos endPos currentTurn char)
   
   ;;Estos dos identificadores estan hechos para sacar la posicion en "X" y "Y"
   ;;de la posicion inicial de una pieza
-  (define yPosInitial ( quotient inicialPos 8 ))
+  (define yPosInitial (quotient inicialPos 8 ))
   (define xPosInitial (remainder inicialPos 8 ))
   
   ;;Estos dos identificadores estan hechos para sacar la posicion en "X" y "Y"
   ;;de la posicion final de una pieza
-  (define yPosFinal ( quotient  endPos 8 ))
+  (define yPosFinal (quotient  endPos 8 ))
   (define xPosFinal (remainder endPos 8 ))
   
   ;;Este identificador saca la distancia que hay entre la posicion inicial y la posicion final
@@ -244,7 +244,7 @@
                 ;;Esta condicion es para ver si el movimiento es hacia la derecha 
                 (if (and (> xPosFinal xPosInitial) (= yPosFinal yPosInitial))
                     1
-                    #f
+                    0
                     )
                 );EndIf
             );;EndIf
@@ -260,10 +260,10 @@
         (if (and (> xPosFinal xPosInitial) (< yPosFinal yPosInitial))
             -7
             (if (and (< xPosFinal xPosInitial)  (> yPosFinal yPosInitial))
-                -9
+                7
                 (if (and (< xPosFinal xPosInitial) (< yPosFinal yPosInitial))
-                    7
-                    #f
+                    -9
+                    0
                     );;EndIf
                 );;EndIf
             );;EndIf
@@ -275,6 +275,8 @@
   ;;Adicionalmente comprobamos que no se coma al rey MUJEJEJE
   
   (define (nonJump stop direc)
+    
+    (displayln directionDiagonal)
     (displayln directionLine)
     (displayln stop)
     
@@ -283,37 +285,51 @@
     (if  (equal? currentTurn 1 )
          
          ;;Esta condicion revisara si la posicion final de la ficha es una ficha contraria o un espacio vacio
-         (if (or (equal? (string-ref str endPos) #\x ) (= (colorComprobant endPos str) -1 ))
              
-             ;;En caso de que esto sea verdad entonces
-             ;;Esta condicion hara el recorrido por la string corroborando que el camino esta libre
-             (if (or (equal? (string-ref str (+ inicialPos stop)) #\x) (equal? (colorComprobant endPos str) -1 ))
+         ;;En caso de que esto sea verdad entonces
+         ;;Esta condicion hara el recorrido por la string corroborando que el camino esta libre
+         (if (or (equal? (string-ref str (+ inicialPos stop)) #\x) (equal? (colorComprobant endPos str) -1 ))
+             (if (= direc 0)
+                 #f
+                 ;;Esta es la condicion de parada
+                 (if (= stop direc)
+                     #t
+                     (nonJump (- stop direc) direc)
+                     );EndIf
+                 );;EndIf
+             #f
+             );;EndIF;;Else
+         ;;Esta condicion hara el recorrido por la string corroborando que el camino esta libre
+         (if (or (equal? (string-ref str (+ inicialPos stop)) #\x) (= (colorComprobant endPos str) 1 ))
+             ;;Esta es la condicion en caso de que la funcion no aplique para la ficha en cuestion 
+             (if (= direc 0 )
+                 #f
                  ;;Esta es la condicion de parada
                  (if (= stop direc)
                      #t
                      (nonJump (- stop direc) direc)
                      );;EndIf
-                  #f
-                 )
-             #f 
-          );;EndIf;;Else
-         
-         ;;Este recorrido se refiere a las fichas blancas
-         (if (or (equal? (string-ref str endPos) #\x ) (= (colorComprobant endPos str) 1 ))
-
-             ;;Esta condicion hara el recorrido por la string corroborando que el camino esta libre
-             (if (or (equal? (string-ref str (+ inicialPos stop)) #\x) (= (colorComprobant endPos str) 1 ))
-                 ;;Esta es la condicion de parada
-                 (if (= stop directionLine)
-                     #t
-                     (nonJump (- stop direc) direc)
-                     );EndIf
-                  #f
-                 )
-             #f 
-          );endIf 
-     );EndIf
+                 );;EndIf
+             #f
+             );;EndIf Else
+         );EndIf
     );EndDefine nonJump
+
+  (define (inLmove)
+            ;;Esta es la posibilidad en la que la L es hacia arriba derecha        ;;Esta es la posibilidad en la que la L es hacia arriba izquierda
+    (if (or (and (= (- yPosInitial 2) yPosFinal) (= (+ xPosInitial 1) xPosFinal) ) (and (= (- yPosInitial 2) yPosFinal  ) (= (- xPosInitial 1) xPosFinal))
+            ;;Esta es la posibilidad en la que la L es hacia abajo derecha         ;;Esta es la posibilidad en la que la L es hacia abajo izquierda
+            (and (= (+ yPosInitial 2) yPosFinal) (= (+ xPosInitial 1) xPosFinal) ) (and (= (+ yPosInitial 2) yPosFinal  ) (= (- xPosInitial 1) xPosFinal))
+            ;;Esta es la posibilidad en la que la L es hacia derecha abajo         ;;Esta es la posibilidad en la que la L es hacia derecha arriba
+            (and (= (+ yPosInitial 1) yPosFinal) (= (+ xPosInitial 2) xPosFinal) ) (and (= (- yPosInitial 1) yPosFinal  ) (= (+ xPosInitial 2) xPosFinal))
+            ;;Esta es la posibilidad en la que la L es hacia izquierda abajo         ;;Esta es la posibilidad en la que la L es hacia izquierda arriba
+            (and (= (+ yPosInitial 1) yPosFinal) (= (- xPosInitial 2) xPosFinal) ) (and (= (- yPosInitial 1) yPosFinal  ) (= (- xPosInitial 2) xPosFinal))
+            )
+        #t
+        #f
+        );EndDefine 
+
+    );EndDefine
   
   
   ;;Esta función determinara si una pieza puede hacer un movimiento en linea
@@ -322,45 +338,51 @@
 
   (define (inMoveLine)
 
-    ;;Esta condicion revisara si la ficha seleccionada se puede mover recto o no 
-    (if (or (equal? (string-ref str inicialPos) #\T ) (equal? (string-ref str inicialPos) #\t );;Aqui evaluamos las torres
-            (equal? (string-ref str inicialPos) #\D ) (equal? (string-ref str inicialPos) #\d );;Aqui evaluamos las damas
-            (equal? (string-ref str inicialPos) #\R ) (equal? (string-ref str inicialPos) #\r );;Aqui evaluamos el rey 
-            (equal? (string-ref str inicialPos) #\P ) (equal? (string-ref str inicialPos) #\p );;Aqui evaluamos los peones
-            );;EndCondition
         (if (nonJump distance directionLine)
-            "El movimiento es recto"
-            "El movimiento no es recto"
+            ;;Si es verdad, el movimiento es valido (recto)
+            #t
+            ;;sino, el movimiento no es valido (noRecto)
+            #f
             );;EndIf
-        "Esta ficha no se puede mover de forma recta"
-        );;EndIf
+       ;;EndIf
 
     );EndFunction inMoveLine
 
   ;;Esta funcion determinara si el movimiento en diagonal es legal o no
   (define (inDiagonalMove)
     
-    (if (equal? currentTurn 1 )
-        (if (or (equal? (string-ref str inicialPos) #\A) (equal? (string-ref str inicialPos) #\D))
             (if (nonJump distance directionDiagonal )
-                "El movimiento es valido"
-                "El movimiento es invalido"
+                ;;Si es verdad, el movimiento es valido (diagonal)
+                #t
+                ;;sino, el movimiento es invalido (noDiagonal)
+               #f
                 );;EndIf
-            "La ficha seleccionada no se mueve en diagonal o no es una ficha Blanca"
-            );;EndIf
-        (if (or (equal? (string-ref str inicialPos) #\a) (equal? (string-ref str inicialPos) #\d))
-            
-            (if (nonJump distance directionDiagonal )
-                "El movimiento es valido"
-                "El movimiento es invalido"
-                );;EndIf
-            "la ficha seleccionada no se mueve en diagonal o no es una ficha Blanca"
-            );;EndIf
-        );;EndIf
     );;EndFunction inDiagonalMove
 
-  (inMoveLine)
-  
+  (if (or (equal? char #\T ) (equal? char #\t ))
+      (inMoveLine)
+      (if (or (equal? char #\A ) (equal? char #\a ))
+          (inDiagonalMove)
+          (if (or (equal? char #\D ) (equal? char #\d ))
+              (if (or (inDiagonalMove)(inMoveLine))
+                  #t
+                  #f
+                  );;EndIf
+              (if (or (equal? char #\R ) (equal? char #\r ))
+                  (if (or (inMoveLine) (inDiagonalMove))
+                      #t
+                      #f
+                      );;EndIf
+                  (if (or (equal? char #\C ) (equal? char #\c ))
+                      (inLmove)
+                      "xxx"
+                   );;EndIf   
+                  );EndIf
+              );EndIf
+          );;EndIf
+      );EndIf
+
+ 
   );;------------------endFunction restrictions-----------------;;
 
 ;;Coronacion
@@ -424,7 +446,16 @@
   (define pos-yNew (pos-y comprobada))
   (define newPos (casilla pos-xNew pos-yNew))
   (define makeMove (MakeString oldString (string-ref oldString oldPos) oldPos newPos))
-  (printf "turnodoooos ~a"pos-xNew)
+  
+  (define oldPosY (quotient oldPos 8 ))
+  (define oldPosX (remainder oldPos 8 ))
+    (printf "turnodoooosini Y ~a\n"oldPosY)
+  (printf "turnodoooosini X ~a\n"oldPosX)
+
+  (define PosY (quotient newPos 8 ))
+  (define PosX (remainder newPos 8 ))
+    (printf "turnodoooosfinal Y ~a\n"PosY)
+  (printf "turnodoooosfinal X ~a\n"PosX)
 
   ;;------------------StartFunctionMovements-----------------;;
 
@@ -449,7 +480,7 @@
                 
                  #t
                  (if (and (equal? (string-ref oldString oldPos) #\P) (or (= oldPos (- newPos 7)) (= oldPos (- newPos 9)))
-                          (equal? (colorComprobant newPos oldString) -1 )) 
+                          (not (equal? (string-ref oldString newPos) #\r )) (not (equal? (colorComprobant newPos oldString) 1 ))) 
                      #t
                      #f
                      );;EndIf
@@ -464,7 +495,7 @@
                       (equal? (string-ref oldString newPos) #\x))
                  #t
                  (if (and (equal? (string-ref oldString oldPos) #\p) (or (= oldPos (+ newPos 7)) (= oldPos (+ newPos 9)))
-                          (equal? (colorComprobant newPos oldString) 1 )) 
+                          (equal? (colorComprobant newPos oldString) 1 ))
                      #t
                      #f
                      );;EndIf
@@ -474,14 +505,139 @@
   
   );;------------------EndFunction pawnMovements-----------------;;
 
+  ;;------------------StartFunction horseMovements-----------------;;
+  ;;Esta funcion servira para comprobar si el caballo se puede mover
+  (define (horseMovements?)
+    ;;Aqui evaluaremos en que turno estamos para saber que caballo se debe de mover
+    (if (equal? turn 1)
+        ;;Esta función evalua que el caballo no se coma el rey contrario (en este caso, blanco), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\r ))(not (equal? (colorComprobant newPos oldString) 1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+        ;;Esta función evalua que el caballo no se coma el rey contrario (en este caso, negro), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\R )) (not (equal? (colorComprobant newPos oldString) -1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+     );;EndIf
+    );;------------------EndFunction horseMovements-----------------;;
+  
+;;------------------StartFunction queenMovements-----------------;;
+(define (queenMovements?)
+
+ ;;Aqui evaluaremos en que turno estamos para saber que reina se debe de mover
+    (if (equal? turn 1)
+        ;;Esta función evalua que la reina no se coma el rey contrario (en este caso, blanco), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\r ))(not (equal? (colorComprobant newPos oldString) 1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+        ;;Esta función evalua que la reina no se coma el rey contrario (en este caso, negro), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\R )) (not (equal? (colorComprobant newPos oldString) -1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+     );;EndIf
+  );;------------------EndFunction queenMovements-----------------;;
+  
+  ;;------------------StartFunction bishopMovements-----------------;;
+  (define (bishopMovement?)
+    
+     ;;Aqui evaluaremos en que turno estamos para saber que alfil se debe de mover
+    (if (equal? turn 1)
+        ;;Esta función evalua que el alfil no se coma el rey contrario (en este caso, blanco), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\r ))(not (equal? (colorComprobant newPos oldString) 1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+        ;;Esta función evalua que el alfil no se coma el rey contrario (en este caso, negro), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\R )) (not (equal? (colorComprobant newPos oldString) -1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+     );;EndIf
+    );;------------------EndFunction bishopMovements-----------------;;
+  
+;;------------------StartFunction towerMovements-----------------;;
+  (define (towerMovement?)
+
+       ;;Aqui evaluaremos en que turno estamos para saber que alfil se debe de mover
+    (if (equal? turn 1)
+        ;;Esta función evalua que el alfil no se coma el rey contrario (en este caso, blanco), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\r ))(not (equal? (colorComprobant newPos oldString) 1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+        ;;Esta función evalua que el alfil no se coma el rey contrario (en este caso, negro), ni se pueda comer a su propio equipo
+        (if (and (not (equal? (string-ref oldString newPos) #\R )) (not (equal? (colorComprobant newPos oldString) -1 )) )
+            (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+            #f
+            );;EndIf
+     );;EndIf
+    
+    );;------------------EndFunction towerMovements?-----------------;;
+
+  #|
+(define pos-xNew (pos-x comprobada))
+  (define pos-yNew (pos-y comprobada))
+  (define newPos (casilla pos-xNew pos-yNew))
+  (define makeMove (MakeString oldString (string-ref oldString oldPos) oldPos newPos))
+  (printf "turnodoooos ~a\n"pos-xNew)
+  (define oldPosY (quotient oldPos 8 ))
+  (define oldPosX (remainder oldPos 8 ))
+
+|#
+
+  ;;------------------StartFunction kingMovements-----------------;;
+  (define (kingMovement?)
+
+    (if (equal? turn 1)
+        (if (or (>= PosY (+ oldPosY 2)) (>= PosX (+ oldPosX 2))
+                (>= oldPosY (+ PosY  2)) (>= oldPosX (+ PosX 2)))
+             #f
+             (if (and (not (equal? (string-ref oldString newPos) #\r ))(not (equal? (colorComprobant newPos oldString) 1 )) )
+                (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+                #f
+                );;EndIf
+            );;EndIf
+         (if (or (>= PosY (+ oldPosY 2)) (>= PosX (+ oldPosX 2))
+                 (>= oldPosY (+ PosY  2)) (>= oldPosX (+ PosX 2))) 
+            #f
+            (if (and (not (equal? (string-ref oldString newPos) #\R ))(not (equal? (colorComprobant newPos oldString) -1 )) )
+                (restrictions oldString oldPos newPos turn (string-ref oldString oldPos))
+                #f
+                );;EndIf
+            );;EndIf
+        );;EndIf
+    );;------------------EndFunction kingMovements?-----------------;;
   ;;Esta condicion, es para evitar que el usuario clickee en la misma posicion y pierda su turno,
   ;;Si la posicion anterior es diferente a la posicion actual, entonces llamaremos a pawnMovements
   ;;(inicialmente debe de llamar a los movimientos en general)
   (if (= oldPos newPos)
       #f
-     (pawnMovements?))
+      (if (or (equal? (string-ref oldString oldPos) #\P )(equal? (string-ref oldString oldPos) #\p ))
+          (pawnMovements?)
+          (if (or (equal? (string-ref oldString oldPos) #\C )(equal? (string-ref oldString oldPos) #\c ))
+              (horseMovements?)
+              (if (or (equal? (string-ref oldString oldPos) #\D )(equal? (string-ref oldString oldPos) #\d ))
+                  (queenMovements?)
+                  (if (or (equal? (string-ref oldString oldPos) #\A )(equal? (string-ref oldString oldPos) #\a ))
+                      (bishopMovement?)
+                      (if (or (equal? (string-ref oldString oldPos) #\T )(equal? (string-ref oldString oldPos) #\t ))
+                          (towerMovement?)
+                          (if (or (equal? (string-ref oldString oldPos) #\R )(equal? (string-ref oldString oldPos) #\r ))
+                          (kingMovement?)
+                          "nada que se programa bro"
+                          );;EndIf
+                          );;EndIf
+                      );;EndIf
+                  );;EndIf
+              );;EndIf   
+          );;EndIf
+      )
   
- );;------------------EndFunction movements?-----------------;;
+  );;------------------EndFunction movements?-----------------;;
 
   ;;Esta comparacion, ve lo que devuelve (movements?) recordemos que esta funcion solo devuelve #t o #f
   ;;En caso de que sea #t entonces observara si el makeMove no es igual a oldString esto para poder mostrar el movimiento
