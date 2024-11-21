@@ -2,12 +2,14 @@
 
 (require graphics/graphics )
 (open-graphics) 
-(define ventana1 (open-viewport "Ajedrez"  800 600))
+(define ventana1 (open-viewport "Ajedrez"  750 550))
 
+((draw-solid-rectangle ventana1) (make-posn 570 30) 50 20 "DarkGray")
+((draw-string ventana1) (make-posn 578 45) "EXIT" "black")
 
 (define (dibujar a b e)
   
-  ((draw-string ventana1) (make-posn 200 30) "     AJEDREZ" "brown")
+  ((draw-string ventana1) (make-posn 200 30) "AJEDREZ" "brown")
   (if (> e 8)
       ((draw-rectangle ventana1) (make-posn 50 50) 401 401 "black")
       (if (> a 400)
@@ -109,12 +111,12 @@
 ; InicialTable nos muestra el tablero inicial
 (define inicialTable (string-append
                       "TCADRACT" ;fichas negras 
-                      "RRRRRRRR" ;peones negros
+                      "PPPPPpPP" ;peones negros
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
-                      "RRRRRRRR" ;peones blancos
+                      "pppppPpp" ;peones blancos
                       "tcadract" ;fichas blancas
                       ))
 
@@ -387,7 +389,7 @@
 
 ;;Coronacion
 
-(define (coronation actPos str)
+(define (coronation turn str)
   
   ;Este identificador va a guardar las iniciales de las fichas Negras
   (define selectStringB (string-append "T" "C" "A" "D" ))
@@ -414,22 +416,12 @@
         );end (if (< count (string-length str))
     ); EndFunction PiecePutOnSelection
 
-  ;;En caso de que el peon Blanco se encuentre en el rango va a llamar la funcion de seleccion de ficha
-  ;; "selectStringW"
-  (if (and (>= actPos 0) (<= actPos 7) )
+ 
+  (if (equal? turn -1) 
        
-      (PiecePutOnSelection selectStringW 0)
-
-      ;;En caso contrario, si el peon negro se encuentra en rango, va a llamar la funcio de seleccion de ficha
-      ;; "selectStringB"
-      (if (and (>= actPos 56) (<= actPos 63))
-          
-          (PiecePutOnSelection selectStringB 0)
-     
-          "Aun no esta en coronacion" 
-
-          ) ;EndIf (and (>= (pawnMovement) 56) (<= (pawnMovement) 63)...#\P))
-      ); EndIf (and (>= (pawnMovement) 0) (<= (pawnMovement) 7)...#\p))
+      (PiecePutOnSelection selectStringW 0)     
+      (PiecePutOnSelection selectStringB 0)
+      );;End If
   );EndFunction Coronation
 
 
@@ -477,11 +469,19 @@
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\P) (= oldPos (- newPos 8))
                       (equal? (string-ref oldString newPos) #\x))
-                
-                 #t
+                 
+                 (if (or (and (>= newPos 56) (<= newPos 63))(and (>= oldPos 56) (<= oldPos 63)))
+          
+                     (coronation turn oldString)
+                     #t 
+                     ) ;EndIf (or (and (>= newPos 56)...
                  (if (and (equal? (string-ref oldString oldPos) #\P) (or (= oldPos (- newPos 7)) (= oldPos (- newPos 9)))
                           (not (equal? (string-ref oldString newPos) #\r )) (not (equal? (colorComprobant newPos oldString) 1 ))) 
-                     #t
+                     (if (or (and (>= newPos 56) (<= newPos 63))(and (>= oldPos 56) (<= oldPos 63)))
+          
+                         (coronation turn oldString)
+                         #t 
+                         ) ;EndIf (or (and (>= newPos 56)...
                      #f
                      );;EndIf
                  );EndIf
@@ -493,17 +493,25 @@
             #t
             (if  (and (equal? (string-ref oldString oldPos) #\p) (= oldPos (+ newPos 8))
                       (equal? (string-ref oldString newPos) #\x))
-                 #t
+                 (if (or (and (>= newPos 0) (<= newPos 7))(and (>= oldPos 0) (<= oldPos 7)))
+          
+                         (coronation turn oldString)
+                         #t 
+                         ) ;EndIf (or (and (>= newPos 0)...
                  (if (and (equal? (string-ref oldString oldPos) #\p) (or (= oldPos (+ newPos 7)) (= oldPos (+ newPos 9)))
-                          (equal? (colorComprobant newPos oldString) 1 ))
-                     #t
+                          (not (equal? (string-ref oldString newPos) #\r )) (equal? (colorComprobant newPos oldString) 1 ))
+                     (if (or (and (>= newPos 0) (<= newPos 7))(and (>= oldPos 0) (<= oldPos 7)))
+          
+                         (coronation turn oldString)
+                         #t 
+                         ) ;EndIf (or (and (>= newPos 0)...
                      #f
                      );;EndIf
                  );EndIf
             );;EndIf
         );EndIf
   
-  );;------------------EndFunction pawnMovements-----------------;;
+    );;------------------EndFunction pawnMovements-----------------;;
 
   ;;------------------StartFunction horseMovements-----------------;;
   ;;Esta funcion servira para comprobar si el caballo se puede mover
@@ -577,18 +585,7 @@
      );;EndIf
     
     );;------------------EndFunction towerMovements?-----------------;;
-
-  #|
-(define pos-xNew (pos-x comprobada))
-  (define pos-yNew (pos-y comprobada))
-  (define newPos (casilla pos-xNew pos-yNew))
-  (define makeMove (MakeString oldString (string-ref oldString oldPos) oldPos newPos))
-  (printf "turnodoooos ~a\n"pos-xNew)
-  (define oldPosY (quotient oldPos 8 ))
-  (define oldPosX (remainder oldPos 8 ))
-
-|#
-
+  
   ;;------------------StartFunction kingMovements-----------------;;
   (define (kingMovement?)
 
@@ -612,8 +609,7 @@
         );;EndIf
     );;------------------EndFunction kingMovements?-----------------;;
   ;;Esta condicion, es para evitar que el usuario clickee en la misma posicion y pierda su turno,
-  ;;Si la posicion anterior es diferente a la posicion actual, entonces llamaremos a pawnMovements
-  ;;(inicialmente debe de llamar a los movimientos en general)
+  ;;Si la posicion anterior es diferente a la posicion actual, entonces buscaremos que ficha se esta intentando mover
   (if (= oldPos newPos)
       #f
       (if (or (equal? (string-ref oldString oldPos) #\P )(equal? (string-ref oldString oldPos) #\p ))
@@ -678,15 +674,30 @@
  ;;EN CASO de que no clickee una ficha blanca mostrara un recuadro
  ;;diciendo "no es una ficha blanca" y no perdera el turno
   
+  (define (finishGame button)
+    (if (and (< (posn-x button) 620) (> (posn-x button) 560) (< (posn-y button) 70) (> (posn-y button) 30))
+        (begin
+          "gracias por jugar"
+      (close-viewport ventana1)
+      )
+        "(finishGame piecePos)"
+         )   
+    )
+  
   (define (whiteTurn)
+
+    (if (and (< (posn-x click) 620) (> (posn-x click) 560) (< (posn-y click) 70) (> (posn-y click) 30))
+        (finishGame click)
+        #f )
     
     (if (equal? piece -1)
+        
           (begin
             (printf "mueven las blancas\n")
             (generalMove string piecePos turn)
-            );EndBegin;else
+           );EndBegin;else
         (begin
-          (printf "no es una ficha blanca\n")
+           (printf "no es una ficha blanca\n")
           (turns string turn)
           );endBegin 
         );EndIf
@@ -699,8 +710,13 @@
  ;;diciendo "no es una ficha negra" y no perdera el turno
   
   (define (blackTurn)
+
+    (if (and (< (posn-x click) 620) (> (posn-x click) 560) (< (posn-y click) 70) (> (posn-y click) 30))
+        (finishGame click)
+        #f )
     
     (if (equal? piece 1)
+        
         (begin
           (printf "mueven las negras\n")
           (generalMove string piecePos turn)
@@ -709,6 +725,7 @@
           (printf "no es una ficha negra\n")
           (turns string turn)
           );;endBegin
+        
         );;EndIf
     
     );;EndDefine blackTurn
