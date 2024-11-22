@@ -91,10 +91,10 @@
     
 (if (= number 0)
     "no esta en jaque"
-      (if (and (> rightDistanceUp 0) (> 64 rightDistanceUp)) (diagonalCheck rightDistanceUp)
-      (if (and (> rightDistanceDown 0) (> 64 rightDistanceDown)) (diagonalCheck rightDistanceDown)
-      (if (and (> leftDistanceUp 0) (> 64 leftDistanceUp)) (diagonalCheck leftDistanceUp)
-      (if (and (> leftDistanceDown 0) (> 64 leftDistanceDown)) (diagonalCheck leftDistanceDown) (checkDiagonal (- number 1)))
+      (if (and (> rightDistanceUp 0) (> 64 rightDistanceUp) (< xPosKing (remainder rightDistanceUp 8))) (diagonalCheck rightDistanceUp)
+      (if (and (> rightDistanceDown 0) (> 64 rightDistanceDown) (< xPosKing (remainder rightDistanceDown 8))) (diagonalCheck rightDistanceDown)
+      (if (and (> leftDistanceUp 0) (> 64 leftDistanceUp) (< (remainder leftDistanceUp 8) xPosKing)) (diagonalCheck leftDistanceUp)
+      (if (and (> leftDistanceDown 0) (> 64 leftDistanceDown) (< (remainder leftDistanceDown 8) xPosKing)) (diagonalCheck leftDistanceDown) (checkDiagonal (- number 1)))
       )))
       );;EndIf
     );;checkDiagonal
