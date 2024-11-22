@@ -76,13 +76,13 @@
     
     (if (equal? turn 1)
     
-        (if (or (and (equal? (string-ref str (- (findTheKing 0) 7 )) #\P ) (< xPosKing (remainder (- (findTheKing 0) 7) 8)))
-                (and (equal? (string-ref str (- (findTheKing 0) 9 )) #\P ) (< (remainder (- (findTheKing 0) 9) 8) xPosKing)))
+        (if (or (and (equal? (string-ref str (- kingPos 7 )) #\P ) (< xPosKing (remainder (- kingPos 7) 8)))
+                (and (equal? (string-ref str (- kingPos 9 )) #\P ) (< (remainder (- kingPos 9) 8) xPosKing)))
             "te tiene en jaque un pion"
             "parchate man"
             );;End
-        (if (or (and (equal? (string-ref str (+ (findTheKing 0) 9 )) #\p ) (< xPosKing (remainder (+ (findTheKing 0) 9) 8)))
-                (and (equal? (string-ref str (+ (findTheKing 0) 7 )) #\p ) (< (remainder (+ (findTheKing 0) 7) 8) xPosKing)))
+        (if (or (and (equal? (string-ref str (+ kingPos 9 )) #\p ) (< xPosKing (remainder (+ kingPos 9) 8)))
+                (and (equal? (string-ref str (+ kingPos 7 )) #\p ) (< (remainder (+ kingPos 7) 8) xPosKing)))
             "te tiene en jaque un pion"
             "parchate man"
             );;End
