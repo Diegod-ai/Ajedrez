@@ -5,12 +5,12 @@
 ;;El codigo entonces va a hacer un recorrido, casilla por casilla, tratando de encontrar el rey
 
 (define str (string-append
-                      "Rxxxxxxx" ;fichas negras 
-                      "xxxxxxxP" ;peones negros
+                      "xxxxxxxx" ;fichas negras 
+                      "xxxxxxxx" ;peones negros
                       "xxxxxxxx" ;espacio en blanco
-                      "xxxxxxxx" ;espacio en blanco 
+                      "xxxxxxxR" ;espacio en blanco 
                       "xxxxxxxx" ;espacio en blanco
-                      "xxxxxxxx" ;espacio en blanco
+                      "pxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;peones blancos
                       "xxxxxxxx" ;fichas blancas
                       ))
@@ -21,14 +21,14 @@
     
     (define (findTheKing counter)
   
-      (define kingToSearch (if (= turn 1 )
+      (define kingToSearch (if (= turn 1)
                                #\r
                                #\R
                                );;EndIf
         );;EndIdentificador
 
-      ( if (= counter 64)
-           0
+      ( if (= counter 63)
+           63
            (if  (equal? (string-ref str counter) kingToSearch )
        
                 counter
