@@ -7,10 +7,10 @@
 (define str (string-append
                       "xxxxxxxx" ;fichas negras 
                       "xxxxxxxx" ;peones negros
+                      "xRxxxxxx" ;espacio en blanco
+                      "pxxxxxxx" ;espacio en blanco 
                       "xxxxxxxx" ;espacio en blanco
-                      "xxxxxxxR" ;espacio en blanco 
                       "xxxxxxxx" ;espacio en blanco
-                      "pxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;peones blancos
                       "xxxxxxxx" ;fichas blancas
                       ))
@@ -55,17 +55,15 @@
 (define leftDistanceUp (* 9 xPosKing))
     
   (define (diagonalCheckPawn)
-    
-    
 (if (equal? turn 1)
     
-        (if (or (equal? (string-ref str (- (findTheKing 0) 7 )) #\P )
-                (equal? (string-ref str (- (findTheKing 0) 9 )) #\P ))
+        (if (or (and (equal? (string-ref str (- (findTheKing 0) 7 )) #\P ) (< xPosKing (remainder (- (findTheKing 0) 7) 8)))
+                (and (equal? (string-ref str (- (findTheKing 0) 9 )) #\P ) (< (remainder (- (findTheKing 0) 9) 8) xPosKing)))
             "te tiene en jaque un pion"
             "parchate man"
          );;End
-        (if (or (equal? (string-ref str (+ (findTheKing 0) 7 )) #\p )
-                (equal? (string-ref str (+ (findTheKing 0) 9 )) #\p ))
+        (if (or (and (equal? (string-ref str (+ (findTheKing 0) 9 )) #\p ) (< xPosKing (remainder (+ (findTheKing 0) 9) 8)))
+                (and (equal? (string-ref str (+ (findTheKing 0) 7 )) #\p ) (< (remainder (+ (findTheKing 0) 7) 8) xPosKing)))
             "te tiene en jaque un pion"
             "parchate man"
          );;End
