@@ -9,10 +9,10 @@
                       "xxxxxxxx" ;peones negros
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco 
-                      "xxxxxxxx" ;espacio en blanco
+                      "axxxxxxR" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;peones blancos
-                      "Rxxxxxxx" ;fichas blancas
+                      "xxxxxxxx" ;fichas blancas
                       ))
 ;;Aqui el turno es de las negras (debe buscar el rey blanco)
 
@@ -94,7 +94,7 @@
       (if (and (> rightDistanceUp 0) (> 64 rightDistanceUp)) (diagonalCheck rightDistanceUp)
       (if (and (> rightDistanceDown 0) (> 64 rightDistanceDown)) (diagonalCheck rightDistanceDown)
       (if (and (> leftDistanceUp 0) (> 64 leftDistanceUp)) (diagonalCheck leftDistanceUp)
-      (if (and (> leftDistanceDown 0) (> 64 leftDistanceDown)) (diagonalCheck leftDistanceDown) (void))
+      (if (and (> leftDistanceDown 0) (> 64 leftDistanceDown)) (diagonalCheck leftDistanceDown) (checkDiagonal (- number 1)))
       )))
       );;EndIf
     );;checkDiagonal
