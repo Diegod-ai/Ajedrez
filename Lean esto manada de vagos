@@ -1,7 +1,80 @@
-Alguno de ustedes llega a copiar completamente el codigo y les juro que les parto las nalgas, 
-Esta hecho solo para que desarrollen la logica, para eso lo documentos todo bien
-De ahi hagan su codigo propio para que puedan sustentar las cosas como deben 
+#lang racket
 
-El Juego o The Game es un juego mental donde el objetivo es olvidarse del propio juego.
-Pensar sobre «El Juego» de cualquier forma, como por ejemplo, la propia lectura de este artículo,
-constituye una derrota, la cual tiene que ser anunciada cada vez que ocurre.
+;;Esta es la prueba
+;;Si el turno es de las blancas, debemos buscar la posicion del rey contrario (negro)
+;;El codigo entonces va a hacer un recorrido, casilla por casilla, tratando de encontrar el rey
+
+(define str (string-append
+                      "Rxxxxxxx" ;fichas negras 
+                      "xxxxxxxP" ;peones negros
+                      "xxxxxxxx" ;espacio en blanco
+                      "xxxxxxxx" ;espacio en blanco 
+                      "xxxxxxxx" ;espacio en blanco
+                      "xxxxxxxx" ;espacio en blanco
+                      "xxxxxxxx" ;peones blancos
+                      "xxxxxxxx" ;fichas blancas
+                      ))
+;;Aqui el turno es de las negras (debe buscar el rey blanco
+
+
+  (define (check turn string)
+    
+    (define (findTheKing counter)
+  
+      (define kingToSearch (if (= turn 1 )
+                               #\r
+                               #\R
+                               );;EndIf
+        );;EndIdentificador
+
+      ( if (= counter 64)
+           0
+           (if  (equal? (string-ref str counter) kingToSearch )
+       
+                counter
+       
+                (findTheKing  (add1 counter))
+                );;EndIf
+           )
+      );;EndFunction findTheKing
+
+;;Listo, este codigo ya nos devuelve la posicion actual del rey contrario
+
+(findTheKing 0)
+
+(define xPosKing (remainder (findTheKing 0) 8 ))
+(define yPosKing (quotient (findTheKing 0) 8 ))
+
+;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha superior
+(define rightDistanceUp (* 7 (- 8 (add1 xPosKing))))
+;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda inferior
+(define leftDistanceDown (* 7 xPosKing))
+;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha inferior
+(define rightDistanceDown (* 9 (- 8 (add1 xPosKing))) )
+;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda superior
+(define leftDistanceUp (* 9 xPosKing))
+    
+  (define (diagonalCheckPawn)
+    
+    
+(if (equal? turn 1)
+    
+        (if (or (equal? (string-ref str (- (findTheKing 0) 7 )) #\P )
+                (equal? (string-ref str (- (findTheKing 0) 9 )) #\P ))
+            "te tiene en jaque un pion"
+            "parchate man"
+         );;End
+        (if (or (equal? (string-ref str (+ (findTheKing 0) 7 )) #\p )
+                (equal? (string-ref str (+ (findTheKing 0) 9 )) #\p ))
+            "te tiene en jaque un pion"
+            "parchate man"
+         );;End
+        )
+  );;EndDefine
+    
+(diagonalCheckPawn)
+    
+);;EndDefine check
+
+
+(check -1 str)
