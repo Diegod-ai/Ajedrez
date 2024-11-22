@@ -6,13 +6,13 @@
 
 (define str (string-append
                       "xxxxxxxx" ;fichas negras 
-                      "AxxxxxAx" ;peones negros
-                      "xrxxxxxx" ;espacio en blanco
-                      "AxAxxxxx" ;espacio en blanco 
+                      "xxxxxxxx" ;peones negros
+                      "xxxxxxxx" ;espacio en blanco
+                      "xxxxxxxx" ;espacio en blanco 
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;espacio en blanco
                       "xxxxxxxx" ;peones blancos
-                      "xxxxxxxx" ;fichas blancas
+                      "Rxxxxxxx" ;fichas blancas
                       ))
 ;;Aqui el turno es de las negras (debe buscar el rey blanco)
 
@@ -39,41 +39,38 @@
 
 ;;Listo, este codigo ya nos devuelve la posicion actual del rey contrario
 
-(findTheKing 0)
+(define kingPos (findTheKing 0))
 
-(define xPosKing (remainder (findTheKing 0) 8 ))
-(define yPosKing (quotient (findTheKing 0) 8 ))
+(define xPosKing (remainder kingPos 8 ))
+(define yPosKing (quotient kingPos 8 ))
 
-;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha superior
-(define rightDistanceUp (* 7 (- 8 (add1 xPosKing))) )
-;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda inferior
-(define leftDistanceDown (* 7 xPosKing))
-;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha inferior
-(define rightDistanceDown (* 9 (- 8 (add1 xPosKing))) )
-;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda superior
-(define leftDistanceUp (* 9 xPosKing))
-    rightDistanceUp
     
-    (define (checkDiagonal)
-
-      (define (diagonalCheck distance)
-        
-        (if (= distance 0)
-            "no esta en jaque"
-            
+    (define (checkDiagonal number)
+      
+        ;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha superior
+        (define rightDistanceUp (- kingPos (* 7 number)))
+        ;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda inferior
+        (define leftDistanceDown (+ kingPos (* 7 number)))
+        ;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la derecha inferior
+        (define rightDistanceDown (+ kingPos (* 9 number)) )
+        ;;Este identificador es para la cantidad de cuadros que puede avanzar hacia la izquierda superior
+        (define leftDistanceUp (- kingPos (* 9 number)))
+      
+      (define (diagonalCheck value)
             (if (equal? turn 1)
             
-                (if (or (equal? (string-ref str distance) #\A) (equal? (string-ref str distance) #\D))
+                (if (or
+                    (equal? (string-ref str value) #\A) (equal? (string-ref str value) #\D))
                     "esta en jaque"
-                    (diagonalCheck (- distance 7))
+                    (checkDiagonal (- number 1))
                     );;EndIf
-                (if (or (equal? (string-ref str distance) #\a) (equal? (string-ref str distance) #\d))
+                (if (or
+                    (equal? (string-ref str value) #\a) (equal? (string-ref str value) #\d))
                     "esta en jaque"
-                    (diagonalCheck (- distance 7))
+                    (checkDiagonal (- number 1))
                     );;EndIf
                 );;EndIf
-            );;EndIf
-        );;EndFunction
+            );;EndDefine
     
   (define (diagonalCheckPawn)
     
@@ -91,14 +88,19 @@
             );;End
         );;EndIf
     );;EndDefine
-
-     (diagonalCheck  rightDistanceUp)
-      
+    
+(if (= number 0)
+    "no esta en jaque"
+      (if (and (> rightDistanceUp 0) (> 64 rightDistanceUp)) (diagonalCheck rightDistanceUp)
+      (if (and (> rightDistanceDown 0) (> 64 rightDistanceDown)) (diagonalCheck rightDistanceDown)
+      (if (and (> leftDistanceUp 0) (> 64 leftDistanceUp)) (diagonalCheck leftDistanceUp)
+      (if (and (> leftDistanceDown 0) (> 64 leftDistanceDown)) (diagonalCheck leftDistanceDown) (void))
+      )))
+      );;EndIf
     );;checkDiagonal
     
-(checkDiagonal)
-    
+(checkDiagonal 7)
 );;EndDefine check
 
 
-(check 1 str)
+(check -1 str)
